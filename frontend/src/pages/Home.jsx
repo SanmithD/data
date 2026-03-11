@@ -4,12 +4,23 @@ import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 
 export default function Home() {
-  const { cards, fetchCards } = useCardStore();
+  // ✅ 1. Extract the new pagination variables and loading state from the store
+  const { cards, fetchCards, currentPage, totalPages, loading } = useCardStore();
   const [showModal, setShowModal] = useState(false);
 
+  // ✅ 2. Fetch the first page on component mount
   useEffect(() => {
-    fetchCards();
+    // (page: 1, limit: 10, append: false)
+    fetchCards(1, 10, false);
   }, [fetchCards]);
+
+  // ✅ 3. Function to handle loading the next page
+  const handleLoadMore = () => {
+    if (currentPage < totalPages && !loading) {
+      // Fetch next page and append to the existing cards array
+      fetchCards(currentPage + 1, 10, true);
+    }
+  };
 
   return (
     <div className="font-sans text-gray-900">
@@ -41,7 +52,12 @@ export default function Home() {
           </button>
         </div>
 
-        {cards.length === 0 ? (
+        {/* ✅ 4. Handle initial loading state */}
+        {loading && cards.length === 0 ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          </div>
+        ) : cards.length === 0 ? (
           <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300">
             <p className="text-gray-500 mb-4">No cards found yet.</p>
             <button
@@ -52,11 +68,30 @@ export default function Home() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {cards.map((card) => (
-              <CardItem key={card._id} card={card} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {cards.map((card) => (
+                <CardItem key={card._id} card={card} />
+              ))}
+            </div>
+
+            {/* ✅ 5. Render "Load More" button if there are more pages */}
+            {currentPage < totalPages && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
+                    loading 
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
+                  }`}
+                >
+                  {loading ? "Loading more..." : "Load More Cards"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
 

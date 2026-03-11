@@ -21,12 +21,23 @@ export default function CardDetails() {
     title: "", description: "", category: "", url: "", image: ""
   });
 
-  const { cardDetails, fetchCardById, childCards, fetchChildCards, updateCard } = useCardStore();
+  // ✅ 1. Extract loading and totalChildren from the store
+  const { 
+    cardDetails, fetchCardById, 
+    childCards, fetchChildCards, updateCard, 
+    totalChildren, loading 
+  } = useCardStore();
 
+  // ✅ 2. Local state to track which page of sub-cards we are on
+  const [childPage, setChildPage] = useState(1);
+
+  // ✅ 3. Fetch card details and the FIRST page of sub-cards on mount
   useEffect(() => {
     if (id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setChildPage(1); // Reset page when navigating to a new card
       fetchCardById(id);
-      fetchChildCards(id);
+      fetchChildCards(id, 1, 10, false); 
     }
   }, [id, fetchCardById, fetchChildCards]);
 
@@ -43,6 +54,15 @@ export default function CardDetails() {
       });
     }
   }, [cardDetails, isEditing]);
+
+  // ✅ 4. Function to handle loading more sub-cards
+  const handleLoadMoreChildren = () => {
+    if (!loading && childCards.length < totalChildren) {
+      const nextPage = childPage + 1;
+      setChildPage(nextPage);
+      fetchChildCards(id, nextPage, 10, true); // append = true
+    }
+  };
 
   if (!cardDetails) {
     return (
@@ -135,10 +155,9 @@ export default function CardDetails() {
               </div>
             )}
 
-            {/* Edit Button */}
             <button 
               onClick={() => setIsEditing(true)} 
-              className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition"
+              className={`absolute z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition ${cardDetails.image ? 'top-4 right-4' : 'top-6 right-6'}`}
               title="Edit Card"
             >
               <Edit size={20} />
@@ -270,7 +289,12 @@ export default function CardDetails() {
           </button>
         </div>
 
-        {!childCards || childCards.length === 0 ? (
+        {/* ✅ 5. Handle initial loading state for Sub-Cards */}
+        {loading && childCards.length === 0 ? (
+          <div className="flex justify-center items-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+          </div>
+        ) : !childCards || childCards.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-300">
             <p className="text-gray-500 mb-3">No sub-cards found.</p>
             <button onClick={() => setShowModal(true)} className="text-blue-600 font-medium hover:underline">
@@ -278,11 +302,30 @@ export default function CardDetails() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {childCards.map((subCard) => (
-              <CardItem key={subCard._id} card={subCard} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {childCards.map((subCard) => (
+                <CardItem key={subCard._id} card={subCard} />
+              ))}
+            </div>
+
+            {/* ✅ 6. Render "Load More" button if there are more sub-cards to fetch */}
+            {childCards.length < totalChildren && (
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={handleLoadMoreChildren}
+                  disabled={loading}
+                  className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
+                    loading 
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
+                  }`}
+                >
+                  {loading ? "Loading..." : "Load More Sub-Cards"}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -291,7 +334,9 @@ export default function CardDetails() {
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
-          fetchChildCards(id); 
+          // ✅ 7. Reset to page 1 after adding a new sub-card so it shows up immediately
+          setChildPage(1);
+          fetchChildCards(id, 1, 10, false); 
         }}
         parentId={cardDetails._id} 
       />

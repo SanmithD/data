@@ -1,7 +1,8 @@
 {
   "type": "module",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "build": "echo 'No build needed for backend'"
   },
   "dependencies": {
     "cors": "^2.8.6",

@@ -1,8 +1,17 @@
-import { 
-  ArrowLeft, ExternalLink, Edit, Save, X, UploadCloud, Image as ImageIcon 
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  ArrowLeft,
+  Edit,
+  ExternalLink,
+  Image as ImageIcon,
+  Save,
+  UploadCloud,
+  X,
 } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import * as XLSX from "xlsx";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
@@ -11,21 +20,29 @@ export default function CardDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  
+
   // Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const [editFormData, setEditFormData] = useState({
-    title: "", description: "", category: "", url: "", image: ""
+    title: "",
+    description: "",
+    category: "",
+    url: "",
+    image: "",
   });
 
   // ✅ 1. Extract loading and totalChildren from the store
-  const { 
-    cardDetails, fetchCardById, 
-    childCards, fetchChildCards, updateCard, 
-    totalChildren, loading 
+  const {
+    cardDetails,
+    fetchCardById,
+    childCards,
+    fetchChildCards,
+    updateCard,
+    totalChildren,
+    loading,
   } = useCardStore();
 
   // ✅ 2. Local state to track which page of sub-cards we are on
@@ -37,7 +54,7 @@ export default function CardDetails() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setChildPage(1); // Reset page when navigating to a new card
       fetchCardById(id);
-      fetchChildCards(id, 1, 10, false); 
+      fetchChildCards(id, 1, 10, false);
     }
   }, [id, fetchCardById, fetchChildCards]);
 
@@ -50,7 +67,7 @@ export default function CardDetails() {
         description: cardDetails.description || "",
         category: cardDetails.category || "",
         url: cardDetails.url || "",
-        image: cardDetails.image || ""
+        image: cardDetails.image || "",
       });
     }
   }, [cardDetails, isEditing]);
@@ -67,14 +84,21 @@ export default function CardDetails() {
   if (!cardDetails) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 text-lg animate-pulse">Loading details...</p>
+        <p className="text-gray-500 text-lg animate-pulse">
+          Loading details...
+        </p>
       </div>
     );
   }
 
-  const formattedDate = new Date(cardDetails.createdAt).toLocaleDateString("en-US", {
-    year: "numeric", month: "long", day: "numeric"
-  });
+  const formattedDate = new Date(cardDetails.createdAt).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   const handleSaveEdit = async () => {
     await updateCard(id, editFormData);
@@ -130,13 +154,58 @@ export default function CardDetails() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const exportToExcel = () => {
+    const data = childCards.map((card) => ({
+      Title: card.title,
+      Description: card.description,
+      Category: card.category,
+      URL: card.url,
+      CreatedAt: new Date(card.createdAt).toLocaleDateString(),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sub Diaries");
+
+    XLSX.writeFile(workbook, "sub_diaries.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+
+    const tableColumn = ["Title", "Description", "Category", "URL", "Created"];
+    const tableRows = [];
+
+    childCards.forEach((card) => {
+      const rowData = [
+        card.title,
+        card.description,
+        card.category,
+        card.url,
+        new Date(card.createdAt).toLocaleDateString(),
+      ];
+
+      tableRows.push(rowData);
+    });
+
+    doc.text("Sub Diaries", 14, 15);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    doc.save("sub_diaries.pdf");
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
-
       {/* Top Bar (Back Button) */}
       <div className="flex justify-between items-center mb-6">
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
         >
           <ArrowLeft size={20} /> Back
@@ -145,19 +214,22 @@ export default function CardDetails() {
 
       {/* Main Card Details */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-10 relative">
-
         {/* VIEW MODE */}
         {!isEditing && (
           <>
             {cardDetails.image && (
               <div className="relative">
-                <img src={cardDetails.image} alt={cardDetails.title} className="w-full h-64 md:h-96 object-cover pointer-events-auto" />
+                <img
+                  src={cardDetails.image}
+                  alt={cardDetails.title}
+                  className="w-full h-64 md:h-96 object-cover pointer-events-auto"
+                />
               </div>
             )}
 
-            <button 
-              onClick={() => setIsEditing(true)} 
-              className={`absolute z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition ${cardDetails.image ? 'top-4 right-4' : 'top-6 right-6'}`}
+            <button
+              onClick={() => setIsEditing(true)}
+              className={`absolute z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition ${cardDetails.image ? "top-4 right-4" : "top-6 right-6"}`}
               title="Edit Card"
             >
               <Edit size={20} />
@@ -165,19 +237,32 @@ export default function CardDetails() {
 
             <div className="p-6 md:p-10">
               <div className="flex justify-between items-start mb-4">
-                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">{cardDetails.title}</h1>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-gray-800">
+                  {cardDetails.title}
+                </h1>
                 {cardDetails.category && (
-                  <span className="bg-blue-100 text-blue-800 text-sm font-bold px-4 py-1.5 rounded-full">{cardDetails.category}</span>
+                  <span className="bg-blue-100 text-blue-800 text-sm font-bold px-4 py-1.5 rounded-full">
+                    {cardDetails.category}
+                  </span>
                 )}
               </div>
 
-              <p className="text-gray-600 text-lg mb-6 leading-relaxed whitespace-pre-line">{cardDetails.description}</p>
+              <p className="text-gray-600 text-lg mb-6 leading-relaxed whitespace-pre-line">
+                {cardDetails.description}
+              </p>
 
               <div className="flex items-center gap-6 text-sm text-gray-500 border-t pt-6">
-                <p>Created on: <span className="font-semibold text-gray-700">{formattedDate}</span></p>
+                <p>
+                  Created on:{" "}
+                  <span className="font-semibold text-gray-700">
+                    {formattedDate}
+                  </span>
+                </p>
                 {cardDetails.url && (
-                  <a 
-                    href={cardDetails.url} target="_blank" rel="noopener noreferrer"
+                  <a
+                    href={cardDetails.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-1 text-blue-600 hover:underline font-medium"
                   >
                     <ExternalLink size={16} /> Visit Link
@@ -195,32 +280,33 @@ export default function CardDetails() {
               <Edit size={24} /> Edit Card Details
             </h2>
             <div className="space-y-6">
-
               {/* IMAGE DRAG & DROP */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Card Image</label>
-                <div 
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Card Image
+                </label>
+                <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
                   className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[200px]
-                    ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:bg-gray-100'}
+                    ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-100"}
                   `}
                 >
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    hidden 
-                    ref={fileInputRef} 
-                    onChange={handleFileSelect} 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
                   />
 
                   {editFormData.image ? (
                     <div className="relative w-full h-48 rounded-lg overflow-hidden group">
-                      <img 
-                        src={editFormData.image} 
-                        alt="Preview" 
+                      <img
+                        src={editFormData.image}
+                        alt="Preview"
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -228,7 +314,7 @@ export default function CardDetails() {
                           <UploadCloud size={20} /> Click or drag to replace
                         </span>
                       </div>
-                      <button 
+                      <button
                         onClick={removeImage}
                         className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition"
                       >
@@ -237,39 +323,85 @@ export default function CardDetails() {
                     </div>
                   ) : (
                     <div className="text-center text-gray-500">
-                      <ImageIcon size={48} className="mx-auto mb-3 text-gray-400" />
-                      <p className="text-sm font-medium text-gray-700">Click to upload or drag & drop</p>
-                      <p className="text-xs text-gray-400 mt-1">SVG, PNG, JPG or GIF</p>
+                      <ImageIcon
+                        size={48}
+                        className="mx-auto mb-3 text-gray-400"
+                      />
+                      <p className="text-sm font-medium text-gray-700">
+                        Click to upload or drag & drop
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        SVG, PNG, JPG or GIF
+                      </p>
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input type="text" name="title" value={editFormData.title} onChange={handleFormChange} className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={editFormData.title}
+                  onChange={handleFormChange}
+                  className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea name="description" value={editFormData.description} onChange={handleFormChange} rows="4" className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={editFormData.description}
+                  onChange={handleFormChange}
+                  rows="4"
+                  className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                  <input type="text" name="category" value={editFormData.category} onChange={handleFormChange} className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Category
+                  </label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={editFormData.category}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">External Link URL</label>
-                  <input type="text" name="url" value={editFormData.url} onChange={handleFormChange} className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-300" placeholder="https://example.com" />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    External Link URL
+                  </label>
+                  <input
+                    type="text"
+                    name="url"
+                    value={editFormData.url}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-300"
+                    placeholder="https://example.com"
+                  />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-4 mt-8 border-t pt-6">
-              <button onClick={handleSaveEdit} className="flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition font-medium shadow-sm">
+              <button
+                onClick={handleSaveEdit}
+                className="flex items-center gap-2 bg-green-600 text-white px-6 py-2.5 rounded-lg hover:bg-green-700 transition font-medium shadow-sm"
+              >
                 <Save size={18} /> Save Changes
               </button>
-              <button onClick={() => setIsEditing(false)} className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-50 transition font-medium">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-lg hover:bg-gray-50 transition font-medium"
+              >
                 <X size={18} /> Cancel
               </button>
             </div>
@@ -281,12 +413,29 @@ export default function CardDetails() {
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Sub Diaries</h2>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-          >
-            + Add Sub Diary
-          </button>
+
+          <div className="flex gap-3">
+            <button
+              onClick={exportToExcel}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Export Excel
+            </button>
+
+            <button
+              onClick={exportToPDF}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Export PDF
+            </button>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              + Add Sub Diary
+            </button>
+          </div>
         </div>
 
         {/* ✅ 5. Handle initial loading state for Sub-Cards */}
@@ -297,7 +446,10 @@ export default function CardDetails() {
         ) : !childCards || childCards.length === 0 ? (
           <div className="text-center py-16 bg-gray-50 rounded-xl border border-dashed border-gray-300">
             <p className="text-gray-500 mb-3">No sub-cards found.</p>
-            <button onClick={() => setShowModal(true)} className="text-blue-600 font-medium hover:underline">
+            <button
+              onClick={() => setShowModal(true)}
+              className="text-blue-600 font-medium hover:underline"
+            >
               Add the first sub-card
             </button>
           </div>
@@ -316,8 +468,8 @@ export default function CardDetails() {
                   onClick={handleLoadMoreChildren}
                   disabled={loading}
                   className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
-                    loading 
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                    loading
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
                   }`}
                 >
@@ -336,9 +488,9 @@ export default function CardDetails() {
           setShowModal(false);
           // ✅ 7. Reset to page 1 after adding a new sub-card so it shows up immediately
           setChildPage(1);
-          fetchChildCards(id, 1, 10, false); 
+          fetchChildCards(id, 1, 10, false);
         }}
-        parentId={cardDetails._id} 
+        parentId={cardDetails._id}
       />
     </div>
   );

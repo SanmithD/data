@@ -13,7 +13,8 @@ app.use(cors({
   origin: [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://data-beta-six.vercel.app"
+    "https://data-beta-six.vercel.app",
+    "https://data-ochre-six.vercel.app"
   ],
   credentials: true
 }));

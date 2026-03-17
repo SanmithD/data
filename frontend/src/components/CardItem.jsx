@@ -1,12 +1,29 @@
-import { ExternalLink, Trash } from "lucide-react";
+import { ExternalLink, Trash, Move } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCardStore } from "../store/cardStore";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-export default function CardItem({ card }) {
+export default function CardItem({ card, id }) {
   const navigate = useNavigate();
   const deleteCard = useCardStore((s) => s.deleteCard);
 
-  // Format the date to a readable format
+  // DnD setup
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, handle: true });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.8 : 1,
+  };
+
   const formattedDate = new Date(card.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -14,17 +31,30 @@ export default function CardItem({ card }) {
   });
 
   return (
-    <div className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-      
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white shadow-md rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full relative"
+    >
+      {/* Drag Handle */}
+      <button
+        {...listeners}
+        {...attributes}
+        className="absolute top-2 right-2 p-2 bg-gray-200 rounded-full hover:bg-gray-300 cursor-grab z-10"
+        title="Drag"
+      >
+        <Move size={18} />
+      </button>
+
       {/* Card Image */}
       {card.image && (
-        <div 
+        <div
           className="w-full h-48 overflow-hidden cursor-pointer"
           onClick={() => navigate(`/card/${card._id}`)}
         >
-          <img 
-            src={card.image} 
-            alt={card.title} 
+          <img
+            src={card.image}
+            alt={card.title}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
         </div>
@@ -32,7 +62,6 @@ export default function CardItem({ card }) {
 
       {/* Card Content */}
       <div className="p-5 flex flex-col flex-grow">
-        
         {/* Header: Title & Category */}
         <div className="flex justify-between items-start mb-3 gap-2">
           <h2
@@ -53,7 +82,15 @@ export default function CardItem({ card }) {
           {card.description}
         </p>
 
-        {/* Footer: Date, Link, and Delete */}
+        <div>
+          {card?.timelineData?.[0]?.timeline && (
+            <span key={card?.timelineData?.[0]?.id} className="text-xs font-bold text-gray-600 whitespace-nowrap">
+              Timeline {card?.timelineData?.[0]?.timeline}
+            </span>
+          )}
+        </div>
+
+        {/* Footer: Date, Link, Delete */}
         <div className="flex items-center justify-between pt-4 mt-auto border-t border-gray-100">
           <div className="flex items-center gap-4">
             {/* Date */}
@@ -63,9 +100,9 @@ export default function CardItem({ card }) {
 
             {/* External URL */}
             {card.url && (
-              <a 
-                href={card.url} 
-                target="_blank" 
+              <a
+                href={card.url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-blue-500 transition-colors"
                 title="Visit link"
@@ -84,7 +121,6 @@ export default function CardItem({ card }) {
             <Trash size={18} />
           </button>
         </div>
-
       </div>
     </div>
   );

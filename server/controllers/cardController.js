@@ -2,15 +2,15 @@ import cardRepository from "../repositories/cardRepository.js";
 
 export const createCard = async (req, res) => {
   try {
-
     const { parentId, ...cardData } = req.body;
 
     const card = await cardRepository.createCard({
       ...cardData,
-      parentCard: parentId || null
+      parentCard: parentId || null,
     });
 
     if (parentId) {
+      // Use card._id (MongoDB ObjectId), NOT card.id (custom number)
       await cardRepository.addSubCard(parentId, card._id);
     }
 
@@ -22,17 +22,32 @@ export const createCard = async (req, res) => {
   }
 };
 
+// ✅ OPTIMIZED: getCards controller
 export const getCards = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
 
-    const cards = await cardRepository.getCards(page, limit);
+    const paginatedData = await cardRepository.getCards(page, limit);
 
-    res.json(cards);
-
+    res.json(paginatedData);
   } catch (error) {
     console.error("Get cards error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// ✅ OPTIMIZED: getChildCards controller
+export const getChildCards = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+
+    const paginatedData = await cardRepository.getChildCards(req.params.id, page, limit);
+
+    res.json(paginatedData);
+  } catch (error) {
+    console.error("Get child cards error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -45,25 +60,6 @@ export const getCardById = async (req, res) => {
 
   } catch (error) {
     console.error("Get card error:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const getChildCards = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const data = await cardRepository.getChildCards(
-      req.params.id,
-      page,
-      limit
-    );
-
-    res.json(data);
-
-  } catch (error) {
-    console.error("Get child cards error:", error);
     res.status(500).json({ error: error.message });
   }
 };

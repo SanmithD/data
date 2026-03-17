@@ -19,7 +19,7 @@ export const useTimelineCardStore = create((set) => ({
       });
     } catch (err) {
       console.error("Fetch TimelineCards error:", err);
-      toast.error("Failed to fetch timeline cards");
+      // toast.error("Failed to fetch timeline cards");
       set({ loading: false });
     }
   },

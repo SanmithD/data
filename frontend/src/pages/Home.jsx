@@ -1,26 +1,75 @@
 import { useEffect, useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
+import { useTimelineCardStore } from "../store/timelineCardStore";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-  // ✅ 1. Extract the new pagination variables and loading state from the store
-  const { cards, fetchCards, currentPage, totalPages, loading } =
-    useCardStore();
+  const {
+    cards,
+    fetchCards,
+    fetchCardsByTimeline,
+    currentPage,
+    totalPages,
+    loading,
+    reorderCards,
+  } = useCardStore();
+
+  const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
+
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
+  const [selectedTimeline, setSelectedTimeline] = useState(null);
 
-  // ✅ 2. Fetch the first page on component mount
+  // DnD Sensors
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  // Fetch cards and timelines on mount
   useEffect(() => {
-    // (page: 1, limit: 10, append: false)
     fetchCards(1, 10, false);
-  }, [fetchCards]);
+    fetchTimelineCards();
+  }, [fetchCards, fetchTimelineCards]);
 
-  // ✅ 3. Function to handle loading the next page
+  // Timeline click handler
+  const handleTimelineClick = (timeline) => {
+    setSelectedTimeline(timeline.id); // use `id` field
+    fetchCardsByTimeline(1, 10, false, timeline.id);
+  };
+
+  // Load more handler
   const handleLoadMore = () => {
     if (currentPage < totalPages && !loading) {
-      // Fetch next page and append to the existing cards array
-      fetchCards(currentPage + 1, 10, true);
+      if (selectedTimeline) {
+        fetchCardsByTimeline(currentPage + 1, 10, true, selectedTimeline);
+      } else {
+        fetchCards(currentPage + 1, 10, true);
+      }
     }
+  };
+
+  // Drag-and-drop handler
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = cards.findIndex((c) => c._id === active.id);
+    const newIndex = cards.findIndex((c) => c._id === over.id);
+
+    const newCards = arrayMove(cards, oldIndex, newIndex);
+    reorderCards(newCards);
   };
 
   return (
@@ -28,7 +77,6 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-24 px-6">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Logo + Title */}
           <div className="flex items-center justify-center gap-4">
             <img
               src="/download.png"
@@ -37,19 +85,77 @@ export default function Home() {
             />
             <h1 className="text-4xl md:text-6xl font-extrabold">My Diary</h1>
           </div>
-
-          {/* Subtitle */}
           <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto text-blue-100">
             Your diary. Organized, secure, and always at your fingertips.
           </p>
-
-          {/* CTA Button */}
           <button
             onClick={() => setShowModal(true)}
-            className="px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+            className="px-8 py-3 mr-1 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
           >
             + Create New Diary
           </button>
+          <button
+            onClick={() => navigate("/timeline")}
+            className="px-8 py-3 ml-1 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+          >
+            Add New Time Line
+          </button>
+        </div>
+      </section>
+
+      {/* Timeline Filter Bar */}
+      <section className="py-12 px-6 max-w-7xl mx-auto overflow-x-auto">
+        <div className="relative min-w-max py-8 px-4">
+          {/* Continuous Horizontal Background Line */}
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
+
+          <div className="flex items-center gap-24 relative z-10">
+            {timelineCards
+              .sort((a, b) => b.year - a.year) // sort descending
+              .map((timeline) => {
+                const isSelected = selectedTimeline === timeline.id;
+
+                return (
+                  <button
+                    key={timeline.id}
+                    onClick={() => handleTimelineClick(timeline)}
+                    className="group relative flex flex-col items-center justify-center focus:outline-none"
+                  >
+                    {/* Year Label */}
+                    <span
+                      className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
+                        isSelected
+                          ? "text-blue-600 scale-110"
+                          : "text-gray-500 group-hover:text-blue-500"
+                      }`}
+                    >
+                      {timeline.timeline}
+                    </span>
+
+                    {/* Node / Dot */}
+                    <div
+                      className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
+                        isSelected
+                          ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
+                          : "bg-white border-gray-300 group-hover:border-blue-400 group-hover:scale-110"
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+
+            {/* Reset Button */}
+            <button
+              onClick={() => {
+                fetchCards(1, 10, false);
+                // ADD THIS: Clear the selected state so the blue dot resets
+                setSelectedTimeline(null);
+              }}
+              className="absolute right-0 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-10"
+            >
+              Reset
+            </button>
+          </div>
         </div>
       </section>
 
@@ -65,7 +171,6 @@ export default function Home() {
           </button>
         </div>
 
-        {/* ✅ 4. Handle initial loading state */}
         {loading && cards.length === 0 ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
@@ -82,13 +187,25 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {cards.map((card) => (
-                <CardItem key={card._id} card={card} />
-              ))}
-            </div>
+            {/* Drag-and-drop container */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={cards.map((c) => c._id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {cards.map((card) => (
+                    <CardItem key={card._id} id={card._id} card={card} />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
 
-            {/* ✅ 5. Render "Load More" button if there are more pages */}
+            {/* Load More */}
             {currentPage < totalPages && (
               <div className="flex justify-center mt-10">
                 <button

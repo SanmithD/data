@@ -29,6 +29,27 @@ export const useCardStore = create((set) => ({
     }
   },
 
+  fetchCardsByTimeline: async (page = 1, limit = 10, append = false, timeId) => {
+    set({ loading: true });
+    try {
+      const res = await api.get(`/cardsByTimeline/${timeId}?page=${page}&limit=${limit}`);
+      
+      set((state) => ({
+        // If append is true (e.g., for a "Load More" button), add to existing array. 
+        // Otherwise, replace the array (e.g., standard page navigation).
+        cards: append ? [...state.cards, ...res.data.cards] : res.data.cards,
+        totalCards: res.data.totalCards,
+        totalPages: res.data.totalPages,
+        currentPage: res.data.currentPage,
+        loading: false,
+      }));
+    } catch (err) {
+      console.error("Fetch cards error:", err);
+      toast.error("Failed to fetch cards");
+      set({ loading: false });
+    }
+  },
+
   // ✅ OPTIMIZED: fetchChildCards with pagination support
   fetchChildCards: async (id, page = 1, limit = 10, append = false) => {
     set({ loading: true });
@@ -103,6 +124,26 @@ export const useCardStore = create((set) => ({
       console.error("Update card error:", err.response?.data || err.message);
       toast.error(err.response?.data?.error || "Update failed");
       throw err;
+    }
+  },
+
+  reorderCards: async (updatedCards) => {
+    try {
+      // 1️⃣ Update local state immediately
+      set({ cards: updatedCards });
+
+      // 2️⃣ Prepare positions for backend
+      const updatedOrder = updatedCards.map((card, index) => ({
+        id: card._id,
+        position: index + 1,
+      }));
+
+      // 3️⃣ Send to backend
+      await api.put("/reorder", { updatedOrder });
+      toast.success("Order updated");
+    } catch (err) {
+      console.error("Reorder cards error:", err.response?.data || err.message);
+      toast.error("Failed to update order");
     }
   },
 }));

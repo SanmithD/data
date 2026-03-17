@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -15,6 +16,7 @@ import * as XLSX from "xlsx";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
+import { useTimelineCardStore } from "../store/timelineCardStore";
 
 export default function CardDetails() {
   const { id } = useParams();
@@ -32,9 +34,10 @@ export default function CardDetails() {
     category: "",
     url: "",
     image: "",
+    timelineId: 0,
   });
 
-  // ✅ 1. Extract loading and totalChildren from the store
+  // Card store
   const {
     cardDetails,
     fetchCardById,
@@ -45,61 +48,50 @@ export default function CardDetails() {
     loading,
   } = useCardStore();
 
-  // ✅ 2. Local state to track which page of sub-cards we are on
+  // Timeline store
+  const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
+
+  // Local state to track page
   const [childPage, setChildPage] = useState(1);
 
-  // ✅ 3. Fetch card details and the FIRST page of sub-cards on mount
+  // Fetch card & first page of children on mount
   useEffect(() => {
     if (id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setChildPage(1); // Reset page when navigating to a new card
+      setChildPage(1);
       fetchCardById(id);
       fetchChildCards(id, 1, 10, false);
     }
   }, [id, fetchCardById, fetchChildCards]);
 
-  // Sync form data when entering edit mode
+  // Fetch timelines
+  useEffect(() => {
+    fetchTimelineCards();
+  }, [fetchTimelineCards]);
+
+  // Sync edit form with cardDetails
   useEffect(() => {
     if (cardDetails && isEditing) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditFormData({
         title: cardDetails.title || "",
         description: cardDetails.description || "",
         category: cardDetails.category || "",
         url: cardDetails.url || "",
         image: cardDetails.image || "",
+        timelineId: cardDetails.timelineId || 0,
       });
     }
   }, [cardDetails, isEditing]);
 
-  // ✅ 4. Function to handle loading more sub-cards
+  // Handle load more
   const handleLoadMoreChildren = () => {
     if (!loading && childCards.length < totalChildren) {
       const nextPage = childPage + 1;
       setChildPage(nextPage);
-      fetchChildCards(id, nextPage, 10, true); // append = true
+      fetchChildCards(id, nextPage, 10, true);
     }
   };
 
-  if (!cardDetails) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 text-lg animate-pulse">
-          Loading details...
-        </p>
-      </div>
-    );
-  }
-
-  const formattedDate = new Date(cardDetails.createdAt).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
-  );
-
+  // Save edit
   const handleSaveEdit = async () => {
     await updateCard(id, editFormData);
     setIsEditing(false);
@@ -109,7 +101,7 @@ export default function CardDetails() {
     setEditFormData({ ...editFormData, [e.target.name]: e.target.value });
   };
 
-  // --- DRAG AND DROP HANDLERS ---
+  // Drag & Drop Handlers
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -124,21 +116,21 @@ export default function CardDetails() {
     e.preventDefault();
     setIsDragging(false);
     const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      processImageFile(files[0]);
-    }
+    if (files && files.length > 0) processImageFile(files[0]);
   };
 
   const handleFileSelect = (e) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      processImageFile(files[0]);
-    }
+    if (files && files.length > 0) processImageFile(files[0]);
   };
 
   const processImageFile = (file) => {
     if (!file.type.startsWith("image/")) {
       alert("Please upload a valid image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be smaller than 5MB.");
       return;
     }
     const reader = new FileReader();
@@ -154,55 +146,60 @@ export default function CardDetails() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  // Export functions
   const exportToExcel = () => {
     const data = childCards.map((card) => ({
       Title: card.title,
       Description: card.description,
       Category: card.category,
       URL: card.url,
+      Timeline: card.timelineId || "",
       CreatedAt: new Date(card.createdAt).toLocaleDateString(),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sub Diaries");
-
     XLSX.writeFile(workbook, "sub_diaries.xlsx");
   };
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-
-    const tableColumn = ["Title", "Description", "Category", "URL", "Created"];
+    const tableColumn = ["Title", "Description", "Category", "URL", "Timeline", "Created"];
     const tableRows = [];
 
     childCards.forEach((card) => {
-      const rowData = [
+      tableRows.push([
         card.title,
         card.description,
         card.category,
         card.url,
+        card.timelineId || "",
         new Date(card.createdAt).toLocaleDateString(),
-      ];
-
-      tableRows.push(rowData);
+      ]);
     });
 
     doc.text("Sub Diaries", 14, 15);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-    });
-
+    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
     doc.save("sub_diaries.pdf");
   };
 
+  if (!cardDetails) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-gray-500 text-lg animate-pulse">Loading details...</p>
+      </div>
+    );
+  }
+
+  const formattedDate = new Date(cardDetails.createdAt).toLocaleDateString(
+    "en-US",
+    { year: "numeric", month: "long", day: "numeric" }
+  );
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {/* Top Bar (Back Button) */}
+      {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => navigate(-1)}
@@ -212,10 +209,9 @@ export default function CardDetails() {
         </button>
       </div>
 
-      {/* Main Card Details */}
+      {/* Card Details */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-10 relative">
-        {/* VIEW MODE */}
-        {!isEditing && (
+        {!isEditing ? (
           <>
             {cardDetails.image && (
               <div className="relative">
@@ -229,7 +225,9 @@ export default function CardDetails() {
 
             <button
               onClick={() => setIsEditing(true)}
-              className={`absolute z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition ${cardDetails.image ? "top-4 right-4" : "top-6 right-6"}`}
+              className={`absolute z-50 bg-white/90 backdrop-blur-sm p-2.5 rounded-full shadow-md text-gray-600 hover:text-blue-600 hover:bg-white transition ${
+                cardDetails.image ? "top-4 right-4" : "top-6 right-6"
+              }`}
               title="Edit Card"
             >
               <Edit size={20} />
@@ -251,12 +249,16 @@ export default function CardDetails() {
                 {cardDetails.description}
               </p>
 
+              {cardDetails.timelineId && (
+                <p className="text-gray-500 mb-2">
+                  Timeline: {timelineCards.find((t) => t.id === cardDetails.timelineId)?.timeline || "N/A"}
+                </p>
+              )}
+
               <div className="flex items-center gap-6 text-sm text-gray-500 border-t pt-6">
                 <p>
                   Created on:{" "}
-                  <span className="font-semibold text-gray-700">
-                    {formattedDate}
-                  </span>
+                  <span className="font-semibold text-gray-700">{formattedDate}</span>
                 </p>
                 {cardDetails.url && (
                   <a
@@ -271,16 +273,14 @@ export default function CardDetails() {
               </div>
             </div>
           </>
-        )}
-
-        {/* EDIT MODE */}
-        {isEditing && (
+        ) : (
+          // Edit Mode
           <div className="p-6 md:p-10 bg-gray-50">
             <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
               <Edit size={24} /> Edit Card Details
             </h2>
             <div className="space-y-6">
-              {/* IMAGE DRAG & DROP */}
+              {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Card Image
@@ -290,9 +290,9 @@ export default function CardDetails() {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[200px]
-                    ${isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-100"}
-                  `}
+                  className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[200px] ${
+                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-100"
+                  }`}
                 >
                   <input
                     type="file"
@@ -338,6 +338,7 @@ export default function CardDetails() {
                 </div>
               </div>
 
+              {/* Title */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Title
@@ -350,6 +351,8 @@ export default function CardDetails() {
                   className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
+
+              {/* Description */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
@@ -362,7 +365,9 @@ export default function CardDetails() {
                   className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Category
@@ -375,6 +380,8 @@ export default function CardDetails() {
                     className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
+
+                {/* URL */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     External Link URL
@@ -384,9 +391,34 @@ export default function CardDetails() {
                     name="url"
                     value={editFormData.url}
                     onChange={handleFormChange}
-                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-300"
                     placeholder="https://example.com"
+                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-gray-300"
                   />
+                </div>
+
+                {/* Timeline */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Timeline
+                  </label>
+                  <select
+                    name="timelineId"
+                    value={editFormData.timelineId}
+                    onChange={(e) =>
+                      setEditFormData((prev) => ({
+                        ...prev,
+                        timelineId: Number(e.target.value),
+                      }))
+                    }
+                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value={0}>Select Timeline</option>
+                    {timelineCards.map((t) => (
+                      <option key={t._id} value={t.id}>
+                        {t.timeline}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -438,7 +470,6 @@ export default function CardDetails() {
           </div>
         </div>
 
-        {/* ✅ 5. Handle initial loading state for Sub-Cards */}
         {loading && childCards.length === 0 ? (
           <div className="flex justify-center items-center py-16">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
@@ -461,7 +492,6 @@ export default function CardDetails() {
               ))}
             </div>
 
-            {/* ✅ 6. Render "Load More" button if there are more sub-cards to fetch */}
             {childCards.length < totalChildren && (
               <div className="flex justify-center mt-10">
                 <button
@@ -486,7 +516,6 @@ export default function CardDetails() {
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
-          // ✅ 7. Reset to page 1 after adding a new sub-card so it shows up immediately
           setChildPage(1);
           fetchChildCards(id, 1, 10, false);
         }}

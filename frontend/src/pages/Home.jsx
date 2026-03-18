@@ -16,6 +16,7 @@ import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
+import { useCardSearchStore } from "../store/useCardSearchStore";
 
 export default function Home() {
   const {
@@ -29,12 +30,20 @@ export default function Home() {
   } = useCardStore();
 
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
+  const {
+    searchResults,
+    currentPage: searchPage,
+    totalPages: searchTotalPages,
+    loading: searchLoading,
+    searchCards,
+    clearSearch,
+  } = useCardSearchStore();
 
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
-  // DnD Sensors
   const sensors = useSensors(useSensor(PointerSensor));
 
   // Fetch cards and timelines on mount
@@ -45,17 +54,60 @@ export default function Home() {
 
   // Timeline click handler
   const handleTimelineClick = (timeline) => {
-    setSelectedTimeline(timeline.id); // use `id` field
+    setSelectedTimeline(timeline.id);
     fetchCardsByTimeline(1, 10, false, timeline.id);
+    clearSearch(); // clear search when timeline selected
+    setSearchText("");
+  };
+
+  // Search handler
+  const handleSearch = () => {
+    if (!searchText.trim()) {
+      clearSearch();
+      return;
+    }
+    searchCards(
+      1,
+      10,
+      [
+        {
+          basicSearchKey: "title",
+          basicSearchValue: searchText,
+          basicSearchType: "regex-string",
+        },
+      ],
+      [],
+      { sortKey: "position", sortType: 1 },
+    );
+    setSelectedTimeline(null); // deselect timeline
   };
 
   // Load more handler
   const handleLoadMore = () => {
-    if (currentPage < totalPages && !loading) {
-      if (selectedTimeline) {
-        fetchCardsByTimeline(currentPage + 1, 10, true, selectedTimeline);
-      } else {
-        fetchCards(currentPage + 1, 10, true);
+    if (searchText.trim()) {
+      if (searchPage < searchTotalPages && !searchLoading) {
+        searchCards(
+          searchPage + 1,
+          10,
+          [
+            {
+              basicSearchKey: "title",
+              basicSearchValue: searchText,
+              basicSearchType: "regex-string",
+            },
+          ],
+          [],
+          { sortKey: "position", sortType: 1 },
+          true,
+        );
+      }
+    } else {
+      if (currentPage < totalPages && !loading) {
+        if (selectedTimeline) {
+          fetchCardsByTimeline(currentPage + 1, 10, true, selectedTimeline);
+        } else {
+          fetchCards(currentPage + 1, 10, true);
+        }
       }
     }
   };
@@ -65,12 +117,24 @@ export default function Home() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = cards.findIndex((c) => c._id === active.id);
-    const newIndex = cards.findIndex((c) => c._id === over.id);
+    const targetCards = searchText.trim() ? searchResults : cards;
+    const oldIndex = targetCards.findIndex((c) => c._id === active.id);
+    const newIndex = targetCards.findIndex((c) => c._id === over.id);
 
-    const newCards = arrayMove(cards, oldIndex, newIndex);
-    reorderCards(newCards);
+    const newCards = arrayMove(targetCards, oldIndex, newIndex);
+
+    if (searchText.trim()) {
+      // Update search results order
+      useCardSearchStore.setState({ searchResults: newCards });
+    } else {
+      reorderCards(newCards);
+    }
   };
+
+  const activeCards = searchText.trim() ? searchResults : cards;
+  const activeLoading = searchText.trim() ? searchLoading : loading;
+  const activeCurrentPage = searchText.trim() ? searchPage : currentPage;
+  const activeTotalPages = searchText.trim() ? searchTotalPages : totalPages;
 
   return (
     <div className="font-sans text-gray-900">
@@ -113,14 +177,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Timeline Filter Bar */}
+      {/* Search Bar */}
+      <section className="py-6 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
+          <input
+            type="text"
+            placeholder="Search cards..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+            className="px-4 py-2 border rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={handleSearch}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Search
+          </button>
+        </div>
+      </section>
+
       {/* Timeline Filter Bar */}
       <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
-        {/* Reset Button */}
         <button
           onClick={() => {
             fetchCards(1, 10, false);
             setSelectedTimeline(null);
+            clearSearch();
+            setSearchText("");
           }}
           className="absolute mt-14 right-3 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-100"
         >
@@ -128,7 +216,6 @@ export default function Home() {
         </button>
 
         <div className="relative min-w-max py-8 px-4">
-          {/* Background Line */}
           <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
 
           <div className="flex items-center gap-24 relative z-10">
@@ -143,7 +230,6 @@ export default function Home() {
                     onClick={() => handleTimelineClick(timeline)}
                     className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
                   >
-                    {/* Label */}
                     <span
                       className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
                         isSelected
@@ -153,8 +239,6 @@ export default function Home() {
                     >
                       {timeline.timeline}
                     </span>
-
-                    {/* Dot */}
                     <div
                       className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
                         isSelected
@@ -172,7 +256,9 @@ export default function Home() {
       {/* Cards Section */}
       <section className="py-16 px-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">My Diaries</h2>
+          <h2 className="text-3xl font-bold text-gray-800">
+            {searchText.trim() ? "Search Results" : "My Diaries"}
+          </h2>
           <button
             onClick={() => setShowModal(true)}
             className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
@@ -181,53 +267,47 @@ export default function Home() {
           </button>
         </div>
 
-        {loading && cards.length === 0 ? (
+        {activeLoading && activeCards.length === 0 ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
           </div>
-        ) : cards.length === 0 ? (
+        ) : activeCards.length === 0 ? (
           <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-            <p className="text-gray-500 mb-4">No cards found yet.</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="text-blue-600 font-medium hover:underline"
-            >
-              Create your first Diary
-            </button>
+            <p className="text-gray-500 mb-4">
+              {searchText.trim() ? "No results found." : "No cards found yet."}
+            </p>
           </div>
         ) : (
           <>
-            {/* Drag-and-drop container */}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={cards.map((c) => c._id)}
+                items={activeCards.map((c) => c._id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {cards.map((card) => (
+                  {activeCards.map((card) => (
                     <CardItem key={card._id} id={card._id} card={card} />
                   ))}
                 </div>
               </SortableContext>
             </DndContext>
 
-            {/* Load More */}
-            {currentPage < totalPages && (
+            {activeCurrentPage < activeTotalPages && (
               <div className="flex justify-center mt-10">
                 <button
                   onClick={handleLoadMore}
-                  disabled={loading}
+                  disabled={activeLoading}
                   className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
-                    loading
+                    activeLoading
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                       : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
                   }`}
                 >
-                  {loading ? "Loading more..." : "Load More Cards"}
+                  {activeLoading ? "Loading..." : "Load More"}
                 </button>
               </div>
             )}

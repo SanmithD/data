@@ -125,3 +125,28 @@ export const getCardsByTimeline = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const searchCards = async (req, res) => {
+  try {
+    const {
+      searchDetails,
+      searchDetailsAnd,
+      sortDetails,
+      page = 1,
+      limit = 10,
+    } = req.body;
+
+    const result = await cardRepository.searchCards({
+      searchDetails,
+      searchDetailsAnd,
+      sortDetails,
+      page,
+      limit,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Search cards error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -10,6 +10,13 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as XLSX from "xlsx";
@@ -46,6 +53,7 @@ export default function CardDetails() {
     updateCard,
     totalChildren,
     loading,
+    reorderChildCards
   } = useCardStore();
 
   // Timeline store
@@ -165,7 +173,14 @@ export default function CardDetails() {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Title", "Description", "Category", "URL", "Timeline", "Created"];
+    const tableColumn = [
+      "Title",
+      "Description",
+      "Category",
+      "URL",
+      "Timeline",
+      "Created",
+    ];
     const tableRows = [];
 
     childCards.forEach((card) => {
@@ -184,17 +199,32 @@ export default function CardDetails() {
     doc.save("sub_diaries.pdf");
   };
 
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = childCards.findIndex((c) => c._id === active.id);
+    const newIndex = childCards.findIndex((c) => c._id === over.id);
+
+    const newOrder = arrayMove(childCards, oldIndex, newIndex);
+
+    reorderChildCards(newOrder); // 🔥 IMPORTANT
+  };
+
   if (!cardDetails) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-500 text-lg animate-pulse">Loading details...</p>
+        <p className="text-gray-500 text-lg animate-pulse">
+          Loading details...
+        </p>
       </div>
     );
   }
 
   const formattedDate = new Date(cardDetails.createdAt).toLocaleDateString(
     "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
+    { year: "numeric", month: "long", day: "numeric" },
   );
 
   return (
@@ -251,14 +281,18 @@ export default function CardDetails() {
 
               {cardDetails.timelineId && (
                 <p className="text-gray-500 mb-2">
-                  Timeline: {timelineCards.find((t) => t.id === cardDetails.timelineId)?.timeline || "N/A"}
+                  Timeline:{" "}
+                  {timelineCards.find((t) => t.id === cardDetails.timelineId)
+                    ?.timeline || "N/A"}
                 </p>
               )}
 
               <div className="flex items-center gap-6 text-sm text-gray-500 border-t pt-6">
                 <p>
                   Created on:{" "}
-                  <span className="font-semibold text-gray-700">{formattedDate}</span>
+                  <span className="font-semibold text-gray-700">
+                    {formattedDate}
+                  </span>
                 </p>
                 {cardDetails.url && (
                   <a
@@ -291,7 +325,9 @@ export default function CardDetails() {
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
                   className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors min-h-[200px] ${
-                    isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-100"
+                    isDragging
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 hover:bg-gray-100"
                   }`}
                 >
                   <input
@@ -486,11 +522,25 @@ export default function CardDetails() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {childCards.map((subCard) => (
-                <CardItem key={subCard._id} card={subCard} />
-              ))}
-            </div>
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={childCards.map((c) => c._id)}
+                strategy={rectSortingStrategy}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {childCards.map((subCard) => (
+                    <CardItem
+                      key={subCard._id}
+                      id={subCard._id}
+                      card={subCard}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
 
             {childCards.length < totalChildren && (
               <div className="flex justify-center mt-10">

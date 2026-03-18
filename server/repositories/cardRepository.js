@@ -107,12 +107,22 @@ class CardRepository {
       {
         $lookup: {
           from: "cards",
-          localField: "subCards",
-          foreignField: "_id",
+          let: { subIds: "$subCards" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$_id", "$$subIds"],
+                },
+              },
+            },
+            {
+              $sort: { position: 1 },
+            },
+          ],
           as: "children",
         },
       },
-
       {
         $lookup: {
           from: "timelinecards",
@@ -239,8 +249,13 @@ class CardRepository {
     // 🔥 clear ALL cards cache
     const keys = await redis.keys("cards:*");
     if (keys.length) {
-      await redis.del(keys);
+      await redis.del(...keys);
     }
+    const childKeys = await redis.keys("childCards:*");
+    if (childKeys.length) {
+      await redis.del(...childKeys);
+    }
+
     updatedOrder.forEach((item) => redis.del(`card:${item.id}`));
   }
 

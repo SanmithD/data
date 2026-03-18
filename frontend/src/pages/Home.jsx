@@ -104,7 +104,18 @@ export default function Home() {
       </section>
 
       {/* Timeline Filter Bar */}
-      <section className="py-12 px-6 max-w-7xl mx-auto overflow-x-auto">
+      <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
+        {/* Reset Button */}
+        <button
+          onClick={() => {
+            fetchCards(1, 10, false);
+            // ADD THIS: Clear the selected state so the blue dot resets
+            setSelectedTimeline(null);
+          }}
+          className="absolute mt-14 right-3 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-100"
+        >
+          Reset
+        </button>
         <div className="relative min-w-max py-8 px-4">
           {/* Continuous Horizontal Background Line */}
           <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
@@ -119,7 +130,7 @@ export default function Home() {
                   <button
                     key={timeline.id}
                     onClick={() => handleTimelineClick(timeline)}
-                    className="group relative flex flex-col items-center justify-center focus:outline-none"
+                    className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
                   >
                     {/* Year Label */}
                     <span
@@ -143,18 +154,6 @@ export default function Home() {
                   </button>
                 );
               })}
-
-            {/* Reset Button */}
-            <button
-              onClick={() => {
-                fetchCards(1, 10, false);
-                // ADD THIS: Clear the selected state so the blue dot resets
-                setSelectedTimeline(null);
-              }}
-              className="absolute right-0 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-10"
-            >
-              Reset
-            </button>
           </div>
         </div>
       </section>

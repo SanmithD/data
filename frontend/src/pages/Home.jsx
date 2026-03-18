@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import {
   DndContext,
-  closestCenter,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -11,11 +10,12 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
-import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const {
@@ -155,8 +155,11 @@ export default function Home() {
                 );
               })}
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        <></>
+      )}
+      {/* Timeline Filter Bar */}
 
       {/* Cards Section */}
       <section className="py-16 px-6 max-w-7xl mx-auto">

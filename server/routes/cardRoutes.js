@@ -1,6 +1,6 @@
 // routes/cardRoutes.js
 import express from "express";
-import { createCard, deleteCard, getCardById, getCards, getCardsByTimeline, getChildCards, reorderCards, updateCard } from "../controllers/cardController.js";
+import { createCard, deleteCard, getCardById, getCards, getCardsByTimeline, getChildCards, reorderCards, searchCards, updateCard } from "../controllers/cardController.js";
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.post("/card", createCard);
 router.get("/cards", getCards);
 router.get("/cardsByTimeline/:timeId", getCardsByTimeline);
 router.get("/card/:id", getCardById);
-
+router.post("/search", searchCards);
 router.get("/card/:id/children", getChildCards);
 
 router.put("/card/:id", updateCard);

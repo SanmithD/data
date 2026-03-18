@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { getRedis } from "../config/redis.js";
 import Card from "../models/Card.js";
+import mongodbAddFieldsForRegexNumberSearch from "../utils/mongodbAddFieldsForRegexNumberSearch.util.js";
 
 class CardRepository {
   async createCard(data) {
@@ -328,6 +329,165 @@ class CardRepository {
     await redis.set(cacheKey, JSON.stringify(result), { EX: 60 });
 
     return result;
+  }
+
+  async searchCards({
+    searchDetails = [],
+    searchDetailsAnd = [],
+    sortDetails = { sortKey: "position", sortType: 1 },
+    page = 1,
+    limit = 10,
+  }) {
+    // const redis = getRedis();
+    // const cacheKey = `cards:search:${page}:${limit}:${JSON.stringify(
+    //   searchDetails,
+    // )}:${JSON.stringify(searchDetailsAnd)}`;
+
+    // const cached = await redis.get(cacheKey);
+    // if (cached) return JSON.parse(cached);
+
+    const skip = (page - 1) * limit;
+
+    const stageDocument = [];
+    const stageCount = [];
+
+    // ✅ REGEX NUMBER SUPPORT
+    const numberStages = mongodbAddFieldsForRegexNumberSearch({
+      searchDetails,
+    });
+
+    numberStages.forEach((s) => {
+      stageDocument.push(s);
+      stageCount.push(s);
+    });
+
+    // ✅ OR FILTER
+    if (searchDetails?.length) {
+      const orConditions = [];
+
+      searchDetails.forEach((el) => {
+        if (el.basicSearchType === "number") {
+          orConditions.push({ [el.basicSearchKey]: el.basicSearchValue });
+        }
+
+        if (el.basicSearchType === "string") {
+          orConditions.push({ [el.basicSearchKey]: el.basicSearchValue });
+        }
+
+        if (el.basicSearchType === "regex-string") {
+          orConditions.push({
+            [el.basicSearchKey]: new RegExp(el.basicSearchValue, "i"),
+          });
+        }
+
+        if (el.basicSearchType === "regex-number") {
+          orConditions.push({
+            [`regexnum_${el.basicSearchKey}`]: {
+              $regex: new RegExp(`${el.basicSearchValue}`, "i"),
+            },
+          });
+        }
+      });
+
+      if (orConditions.length) {
+        const stage = { $match: { $or: orConditions } };
+        stageDocument.push(stage);
+        stageCount.push(stage);
+      }
+    }
+
+    // ✅ AND FILTER
+    if (searchDetailsAnd?.length) {
+      const andConditions = [];
+
+      searchDetailsAnd.forEach((el) => {
+        if (el.basicSearchType === "number") {
+          andConditions.push({ [el.basicSearchKey]: el.basicSearchValue });
+        }
+
+        if (el.basicSearchType === "string") {
+          andConditions.push({ [el.basicSearchKey]: el.basicSearchValue });
+        }
+
+        if (el.basicSearchType === "regex-string") {
+          andConditions.push({
+            [el.basicSearchKey]: new RegExp(el.basicSearchValue, "i"),
+          });
+        }
+
+        if (el.basicSearchType === "regex-number") {
+          andConditions.push({
+            [`regexnum_${el.basicSearchKey}`]: {
+              $regex: new RegExp(`${el.basicSearchValue}`, "i"),
+            },
+          });
+        }
+      });
+
+      if (andConditions.length) {
+        const stage = { $match: { $and: andConditions } };
+        stageDocument.push(stage);
+        stageCount.push(stage);
+      }
+    }
+
+    // ✅ ONLY ROOT CARDS (same as your logic)
+    const rootMatch = { $match: { parentCard: null } };
+    stageDocument.push(rootMatch);
+    stageCount.push(rootMatch);
+
+    // ✅ SORT
+    const sortStage = {
+      $sort: { [sortDetails.sortKey]: sortDetails.sortType },
+    };
+
+    stageDocument.push(sortStage);
+    stageCount.push(sortStage);
+
+    // ✅ PAGINATION
+    stageDocument.push({ $skip: skip });
+    stageDocument.push({ $limit: limit });
+
+    // ✅ LOOKUP (timeline)
+    stageDocument.push({
+      $lookup: {
+        from: "timelinecards",
+        let: { timeId: "$timelineId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$id", "$$timeId"] },
+            },
+          },
+          {
+            $project: { id: 1, timeline: 1 },
+          },
+        ],
+        as: "timelineData",
+      },
+    });
+
+    // ✅ COUNT
+    stageCount.push({ $count: "count" });
+
+    const [docs, countResult] = await Promise.all([
+      Card.aggregate(stageDocument),
+      Card.aggregate(stageCount),
+    ]);
+
+    const total = countResult?.[0]?.count || 0;
+
+    const response = {
+      cards: docs,
+      totalCards: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      limit,
+    };
+
+    // await redis.set(cacheKey, JSON.stringify(response), { EX: 60 });
+
+    return response;
   }
 }
 

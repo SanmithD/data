@@ -90,3 +90,38 @@ export const deleteCard = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// Update card positions after drag-and-drop
+export const reorderCards = async (req, res) => {
+  try {
+    const { updatedOrder } = req.body;
+    // updatedOrder = [{ id: "mongoId1", position: 1 }, { id: "mongoId2", position: 2 }, ...]
+
+    if (!Array.isArray(updatedOrder)) {
+      return res.status(400).json({ error: "Invalid order format" });
+    }
+
+    // Use repository function to bulk update positions
+    await cardRepository.updateCardPositions(updatedOrder);
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Reorder cards error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getCardsByTimeline = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+    const timeId = req.params
+
+    const paginatedData = await cardRepository.getCardsByTimelineId(page, limit, timeId);
+
+    res.json(paginatedData);
+  } catch (error) {
+    console.error("Get cards error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

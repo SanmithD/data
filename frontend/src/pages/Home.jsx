@@ -75,54 +75,65 @@ export default function Home() {
   return (
     <div className="font-sans text-gray-900">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-24 px-6">
+      <section className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-16 sm:py-20 md:py-24 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-4">
+          {/* Logo + Title */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <img
               src="/download.png"
               alt="logo"
-              className="w-14 h-14 md:w-20 md:h-20 object-contain"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 object-contain"
             />
-            <h1 className="text-4xl md:text-6xl font-extrabold">My Diary</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold">
+              My Diary
+            </h1>
           </div>
-          <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto text-blue-100">
+
+          {/* Subtitle */}
+          <p className="text-sm sm:text-base md:text-xl mt-4 mb-8 sm:mb-10 max-w-xl sm:max-w-2xl mx-auto text-blue-100 leading-relaxed">
             Your diary. Organized, secure, and always at your fingertips.
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-8 py-3 mr-1 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
-          >
-            + Create New Diary
-          </button>
-          <button
-            onClick={() => navigate("/timeline")}
-            className="px-8 py-3 ml-1 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
-          >
-            Add New Time Line
-          </button>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+            >
+              + Create New Diary
+            </button>
+
+            <button
+              onClick={() => navigate("/timeline")}
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+            >
+              Add New Timeline
+            </button>
+          </div>
         </div>
       </section>
 
+      {/* Timeline Filter Bar */}
       {/* Timeline Filter Bar */}
       <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
         {/* Reset Button */}
         <button
           onClick={() => {
             fetchCards(1, 10, false);
-            // ADD THIS: Clear the selected state so the blue dot resets
             setSelectedTimeline(null);
           }}
           className="absolute mt-14 right-3 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-100"
         >
           Reset
         </button>
+
         <div className="relative min-w-max py-8 px-4">
-          {/* Continuous Horizontal Background Line */}
+          {/* Background Line */}
           <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
 
           <div className="flex items-center gap-24 relative z-10">
             {timelineCards
-              .sort((a, b) => b.year - a.year) // sort descending
+              .sort((a, b) => b.year - a.year)
               .map((timeline) => {
                 const isSelected = selectedTimeline === timeline.id;
 
@@ -132,7 +143,7 @@ export default function Home() {
                     onClick={() => handleTimelineClick(timeline)}
                     className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
                   >
-                    {/* Year Label */}
+                    {/* Label */}
                     <span
                       className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
                         isSelected
@@ -143,7 +154,7 @@ export default function Home() {
                       {timeline.timeline}
                     </span>
 
-                    {/* Node / Dot */}
+                    {/* Dot */}
                     <div
                       className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
                         isSelected
@@ -155,11 +166,8 @@ export default function Home() {
                 );
               })}
           </div>
-        </section>
-      ) : (
-        <></>
-      )}
-      {/* Timeline Filter Bar */}
+        </div>
+      </section>
 
       {/* Cards Section */}
       <section className="py-16 px-6 max-w-7xl mx-auto">

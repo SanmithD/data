@@ -39,7 +39,7 @@ class CardRepository {
           $match: { parentCard: null },
         },
         {
-          $sort: { createdAt: -1 },
+          $sort: { position: 1 },
         },
         {
           $skip: skip,
@@ -236,7 +236,11 @@ class CardRepository {
 
     // optional: clear caches
     const redis = getRedis();
-    await redis.del("cards:1:10");
+    // 🔥 clear ALL cards cache
+    const keys = await redis.keys("cards:*");
+    if (keys.length) {
+      await redis.del(keys);
+    }
     updatedOrder.forEach((item) => redis.del(`card:${item.id}`));
   }
 
@@ -263,7 +267,7 @@ class CardRepository {
           $match: matchFilter,
         },
         {
-          $sort: { createdAt: -1 },
+          $sort: { position: 1 },
         },
         {
           $skip: skip,

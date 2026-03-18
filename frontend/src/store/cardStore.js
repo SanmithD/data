@@ -12,9 +12,9 @@ export const useCardStore = create((set) => ({
     set({ loading: true });
     try {
       const res = await api.get(`/cards?page=${page}&limit=${limit}`);
-      
+
       set((state) => ({
-        // If append is true (e.g., for a "Load More" button), add to existing array. 
+        // If append is true (e.g., for a "Load More" button), add to existing array.
         // Otherwise, replace the array (e.g., standard page navigation).
         cards: append ? [...state.cards, ...res.data.cards] : res.data.cards,
         totalCards: res.data.totalCards,
@@ -29,13 +29,20 @@ export const useCardStore = create((set) => ({
     }
   },
 
-  fetchCardsByTimeline: async (page = 1, limit = 10, append = false, timeId) => {
+  fetchCardsByTimeline: async (
+    page = 1,
+    limit = 10,
+    append = false,
+    timeId,
+  ) => {
     set({ loading: true });
     try {
-      const res = await api.get(`/cardsByTimeline/${timeId}?page=${page}&limit=${limit}`);
-      
+      const res = await api.get(
+        `/cardsByTimeline/${timeId}?page=${page}&limit=${limit}`,
+      );
+
       set((state) => ({
-        // If append is true (e.g., for a "Load More" button), add to existing array. 
+        // If append is true (e.g., for a "Load More" button), add to existing array.
         // Otherwise, replace the array (e.g., standard page navigation).
         cards: append ? [...state.cards, ...res.data.cards] : res.data.cards,
         totalCards: res.data.totalCards,
@@ -54,10 +61,14 @@ export const useCardStore = create((set) => ({
   fetchChildCards: async (id, page = 1, limit = 10, append = false) => {
     set({ loading: true });
     try {
-      const res = await api.get(`/card/${id}/children?page=${page}&limit=${limit}`);
-      
+      const res = await api.get(
+        `/card/${id}/children?page=${page}&limit=${limit}`,
+      );
+
       set((state) => ({
-        childCards: append ? [...state.childCards, ...res.data.children] : res.data.children,
+        childCards: append
+          ? [...state.childCards, ...res.data.children]
+          : res.data.children,
         totalChildren: res.data.totalChildren,
         loading: false,
       }));
@@ -112,7 +123,8 @@ export const useCardStore = create((set) => ({
 
       // Update cardDetails if currently viewing this card
       set((state) => ({
-        cardDetails: state.cardDetails?._id === id ? res.data : state.cardDetails,
+        cardDetails:
+          state.cardDetails?._id === id ? res.data : state.cardDetails,
         // Update the card in cards array
         cards: state.cards.map((c) => (c._id === id ? res.data : c)),
         // Update the card in childCards array
@@ -143,6 +155,25 @@ export const useCardStore = create((set) => ({
       toast.success("Order updated");
     } catch (err) {
       console.error("Reorder cards error:", err.response?.data || err.message);
+      toast.error("Failed to update order");
+    }
+  },
+  reorderChildCards: async (updatedCards) => {
+    try {
+      // ✅ update UI instantly
+      set({ childCards: updatedCards });
+
+      // ✅ send positions to backend
+      const updatedOrder = updatedCards.map((card, index) => ({
+        id: card._id,
+        position: index + 1,
+      }));
+
+      await api.put("/reorder", { updatedOrder });
+
+      toast.success("Order updated");
+    } catch (err) {
+      console.error("Reorder child cards error:", err);
       toast.error("Failed to update order");
     }
   },

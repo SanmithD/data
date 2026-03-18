@@ -39,7 +39,17 @@ const cardSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Card"
       }
-    ]
+    ],
+    position: {
+      type: Number,
+      required: true,
+      default: 0,
+      index: true,
+    },
+    timelineId: {
+      type: Number,
+      default: 0
+    }
   },
   { timestamps: true }
 );
@@ -54,6 +64,12 @@ cardSchema.pre("save", async function () {
       .sort({ id: -1 });
 
     this.id = lastCard ? lastCard.id + 1 : 1;
+
+    // ✅ If position not set, set to last + 1
+    if (!this.position) {
+      const lastPosition = await this.constructor.findOne().sort({ position: -1 });
+      this.position = lastPosition ? lastPosition.position + 1 : 1;
+    }
   }
 });
 

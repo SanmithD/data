@@ -1,8 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import {
-  ArrowLeft,
-  ExternalLink,
-} from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AddCardModal from "../components/AddCardModal";
@@ -14,7 +11,6 @@ export default function CardDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-
 
   // Card store
   const {
@@ -105,9 +101,10 @@ export default function CardDetails() {
             )}
           </div>
 
-          <p className="text-gray-600 text-lg mb-6 leading-relaxed whitespace-pre-line">
-            {cardDetails.description}
-          </p>
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: cardDetails.description }}
+          />
 
           {cardDetails.timelineId && (
             <p className="text-gray-500 mb-2">

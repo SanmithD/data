@@ -71,7 +71,7 @@ export const useCardStore = create((set) => ({
   fetchCardById: async (id) => {
     try {
       const res = await api.get(`/card/${id}`);
-      set({ cardDetails: res.data });
+      set({ cardDetails: res.data.data });
     } catch (err) {
       console.error("Fetch card error:", err);
       toast.error("Failed to load card");

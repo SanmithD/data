@@ -1,8 +1,10 @@
+import { ChevronDown, RotateCcw, Search } from "lucide-react"; // Assuming lucide-react is used, or replace with SVGs
 import { useEffect, useState } from "react";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
+import { useCardSearchStore } from "../store/useCardSearchStore";
 
 export default function Home() {
   const {
@@ -15,149 +17,296 @@ export default function Home() {
   } = useCardStore();
 
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
+  const {
+    searchResults,
+    currentPage: searchPage,
+    totalPages: searchTotalPages,
+    loading: searchLoading,
+    searchCards,
+    clearSearch,
+  } = useCardSearchStore();
 
+  const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [perPage, setPerPage] = useState(10);
 
-  // DnD Sensors
-
-  // Fetch cards and timelines on mount
   useEffect(() => {
-    fetchCards(1, 10, false);
+    fetchCards(1, perPage, false);
     fetchTimelineCards();
-  }, [fetchCards, fetchTimelineCards]);
+  }, [fetchCards, fetchTimelineCards, perPage]);
 
-  // Timeline click handler
   const handleTimelineClick = (timeline) => {
-    setSelectedTimeline(timeline.id); // use `id` field
-    fetchCardsByTimeline(1, 10, false, timeline.id);
+    setSelectedTimeline(timeline.id);
+    fetchCardsByTimeline(1, perPage, false, timeline.id);
+    clearSearch();
+    setSearchText("");
   };
 
-  // Load more handler
+  const handleSearch = () => {
+    if (!searchText.trim()) {
+      clearSearch();
+      return;
+    }
+    searchCards(
+      1,
+      perPage,
+      [
+        {
+          basicSearchKey: "title",
+          basicSearchValue: searchText,
+          basicSearchType: "regex-string",
+        },
+      ],
+      [],
+      { sortKey: "position", sortType: 1 },
+    );
+    setSelectedTimeline(null);
+  };
+
+  const handleReset = () => {
+    setSearchText("");
+    setSelectedTimeline(null);
+    clearSearch();
+    fetchCards(1, perPage, false);
+  };
+
   const handleLoadMore = () => {
-    if (currentPage < totalPages && !loading) {
-      if (selectedTimeline) {
-        fetchCardsByTimeline(currentPage + 1, 10, true, selectedTimeline);
-      } else {
-        fetchCards(currentPage + 1, 10, true);
-      }
+    const nextPage = (searchText.trim() ? searchPage : currentPage) + 1;
+    if (searchText.trim()) {
+      searchCards(
+        nextPage,
+        perPage,
+        [
+          {
+            basicSearchKey: "title",
+            basicSearchValue: searchText,
+            basicSearchType: "regex-string",
+          },
+        ],
+        [],
+        { sortKey: "position", sortType: 1 },
+        true,
+      );
+    } else if (selectedTimeline) {
+      fetchCardsByTimeline(nextPage, perPage, true, selectedTimeline);
+    } else {
+      fetchCards(nextPage, perPage, true);
     }
   };
 
+  const activeCards = searchText.trim() ? searchResults : cards;
+  const activeLoading = searchText.trim() ? searchLoading : loading;
+  const activeCurrentPage = searchText.trim() ? searchPage : currentPage;
+  const activeTotalPages = searchText.trim() ? searchTotalPages : totalPages;
+
   return (
-    <div className="font-sans text-gray-900">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-24 px-6">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-4">
-            <img
-              src="/download.png"
-              alt="logo"
-              className="w-14 h-14 md:w-20 md:h-20 object-contain"
-            />
-            <h1 className="text-4xl md:text-6xl font-extrabold">My Diary</h1>
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      {/* --- HERO SECTION --- */}
+      <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-16">
+          <div className="flex flex-col items-center gap-6 mb-6">
+            {/* Logo */}
+            <div className="p-1 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
+              <img
+                src="/download.png"
+                alt="logo"
+                className="h-20 w-20 object-contain"
+              />
+            </div>
+
+            {/* Title */}
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-200">
+              My Diary
+            </h1>
           </div>
-          <p className="text-lg md:text-xl mb-10 max-w-2xl mx-auto text-blue-100">
-            Your diary. Organized, secure, and always at your fingertips.
+
+          {/* Subtitle */}
+          <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            Capture your thoughts, relive your moments, and preserve your
+            memories in a clean, beautiful timeline.
           </p>
         </div>
       </section>
 
-      {/* Timeline Filter Bar */}
-      <section className="py-12 px-6 max-w-7xl mx-auto overflow-x-auto">
-        <div className="relative min-w-max py-8 px-4">
-          {/* Continuous Horizontal Background Line */}
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
+      {/* --- TOOLBAR: SEARCH & LIMIT --- */}
+      <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center">
+          {/* Search Input */}
+          <div className="relative w-full">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search entries..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="w-full md:pl-11 md:pr-4 md:py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+            />
+          </div>
 
-          <div className="flex items-center gap-24 relative z-10">
-            {timelineCards
-              .sort((a, b) => b.year - a.year) // sort descending
-              .map((timeline) => {
-                const isSelected = selectedTimeline === timeline.id;
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Limit Selector */}
+            <div className="relative flex-1 md:w-32">
+              <select
+                value={perPage}
+                onChange={(e) => setPerPage(Number(e.target.value))}
+                className="w-full appearance-none bg-gray-50 pl-4 pr-10 py-3 rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="10">10 / page</option>
+                <option value="20">20 / page</option>
+                <option value="50">50 / page</option>
+                <option value="100">100 / page</option>
+              </select>
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
+            </div>
 
-                return (
-                  <button
-                    key={timeline.id}
-                    onClick={() => handleTimelineClick(timeline)}
-                    className="group relative flex flex-col items-center justify-center focus:outline-none"
-                  >
-                    {/* Year Label */}
-                    <span
-                      className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
-                        isSelected
-                          ? "text-blue-600 scale-110"
-                          : "text-gray-500 group-hover:text-blue-500"
-                      }`}
-                    >
-                      {timeline.timeline}
-                    </span>
-
-                    {/* Node / Dot */}
-                    <div
-                      className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
-                        isSelected
-                          ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
-                          : "bg-white border-gray-300 group-hover:border-blue-400 group-hover:scale-110"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
-
-            {/* Reset Button */}
+            {/* Actions */}
             <button
-              onClick={() => {
-                fetchCards(1, 10, false);
-                // ADD THIS: Clear the selected state so the blue dot resets
-                setSelectedTimeline(null);
-              }}
-              className="absolute right-0 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-10"
+              onClick={handleSearch}
+              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
             >
-              Reset
+              Search
+            </button>
+            <button
+              onClick={handleReset}
+              className="p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
+              title="Reset Filters"
+            >
+              <RotateCcw size={20} />
             </button>
           </div>
         </div>
       </section>
 
-      {/* Cards Section */}
-      <section className="py-16 px-6 max-w-7xl mx-auto">
+      {/* --- TIMELINE SECTION --- */}
+      <section className="py-12 px-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-gray-800">Timeline Filter</h2>
+          <button
+            onClick={() => {
+              fetchCards(1, 10, false);
+              setSelectedTimeline(null);
+              clearSearch();
+              setSearchText("");
+            }}
+            className="bg-gray-800 cursor-pointer hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
+          >
+            Reset
+          </button>
+        </div>
 
-        {loading && cards.length === 0 ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+        <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
+          <div className="relative min-w-max py-8 px-4">
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
+
+            <div className="flex items-center gap-24 relative z-10">
+              {timelineCards
+                .sort((a, b) => b.year - a.year)
+                .map((timeline) => {
+                  const isSelected = selectedTimeline === timeline.id;
+
+                  return (
+                    <button
+                      key={timeline.id}
+                      onClick={() => handleTimelineClick(timeline)}
+                      className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
+                    >
+                      <span
+                        className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
+                          isSelected
+                            ? "text-blue-600 scale-110"
+                            : "text-gray-500 group-hover:text-blue-500"
+                        }`}
+                      >
+                        {timeline.timeline}
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
+                          isSelected
+                            ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
+                            : "bg-white border-gray-300 group-hover:border-blue-400 group-hover:scale-110"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+            </div>
           </div>
-        ) : cards.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-            <p className="text-gray-500 mb-4">No cards found yet.</p>
+        </section>
+      </section>
+
+      {/* --- CARDS GRID --- */}
+      <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">
+        {activeLoading && activeCards.length === 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="h-64 bg-gray-200 animate-pulse rounded-2xl"
+              />
+            ))}
+          </div>
+        ) : activeCards.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search size={32} className="text-gray-300" />
+            </div>
+            <p className="text-gray-500 font-medium">
+              {searchText.trim()
+                ? `No results for "${searchText}"`
+                : "No entries found in this period."}
+            </p>
           </div>
         ) : (
           <>
-            {/* Drag-and-drop container */}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {cards.map((card) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {activeCards.map((card) => (
                 <CardItem key={card._id} id={card._id} card={card} />
               ))}
             </div>
 
-            {/* Load More */}
-            {currentPage < totalPages && (
-              <div className="flex justify-center mt-10">
+            {/* --- PAGINATION / LOAD MORE --- */}
+            <div className="mt-16 flex flex-col items-center gap-4">
+              <p className="text-sm text-gray-500 font-medium">
+                Showing page{" "}
+                <span className="text-gray-900">{activeCurrentPage}</span> of{" "}
+                <span className="text-gray-900">{activeTotalPages}</span>
+              </p>
+
+              {activeCurrentPage < activeTotalPages && (
                 <button
                   onClick={handleLoadMore}
-                  disabled={loading}
-                  className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
-                    loading
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
-                  }`}
+                  disabled={activeLoading}
+                  className="group relative px-10 py-4 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm flex items-center gap-3 disabled:opacity-50"
                 >
-                  {loading ? "Loading more..." : "Load More Cards"}
+                  {activeLoading ? (
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent animate-spin rounded-full" />
+                  ) : (
+                    "Load More Entries"
+                  )}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
       </section>
+
+      <AddCardModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        parentId={null}
+      />
     </div>
   );
 }

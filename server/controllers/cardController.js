@@ -37,18 +37,29 @@ export const getCards = async (req, res) => {
   }
 };
 
-// ✅ OPTIMIZED: getChildCards controller
 export const getChildCards = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
 
-    const paginatedData = await cardRepository.getChildCards(req.params.id, page, limit);
+    const data = await cardRepository.getChildCards(
+      req.params.id,
+      page,
+      limit
+    );
 
-    res.json(paginatedData);
+    res.status(200).json({
+      success: true,
+      ...data,
+    });
+
   } catch (error) {
     console.error("Get child cards error:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -56,11 +67,18 @@ export const getCardById = async (req, res) => {
   try {
     const card = await cardRepository.getCardById(req.params.id);
 
-    res.json(card);
+    res.status(200).json({
+      success: true,
+      data: card,
+    });
 
   } catch (error) {
     console.error("Get card error:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 
@@ -83,11 +101,18 @@ export const deleteCard = async (req, res) => {
   try {
     await cardRepository.deleteCard(req.params.id);
 
-    res.json({ message: "Card deleted" });
+    res.status(200).json({
+      success: true,
+      message: "Card deleted successfully",
+    });
 
   } catch (error) {
     console.error("Delete card error:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 

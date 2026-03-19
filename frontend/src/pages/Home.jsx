@@ -10,6 +10,7 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AddCardModal from "../components/AddCardModal";
@@ -43,19 +44,20 @@ export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
+  const [perPage, setPerPage] = useState(10);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
   // Fetch cards and timelines on mount
   useEffect(() => {
-    fetchCards(1, 10, false);
+    fetchCards(1, perPage, false);
     fetchTimelineCards();
-  }, [fetchCards, fetchTimelineCards]);
+  }, [fetchCards, fetchTimelineCards, perPage]);
 
   // Timeline click handler
   const handleTimelineClick = (timeline) => {
     setSelectedTimeline(timeline.id);
-    fetchCardsByTimeline(1, 10, false, timeline.id);
+    fetchCardsByTimeline(1, perPage, false, timeline.id);
     clearSearch(); // clear search when timeline selected
     setSearchText("");
   };
@@ -68,7 +70,7 @@ export default function Home() {
     }
     searchCards(
       1,
-      10,
+      perPage,
       [
         {
           basicSearchKey: "title",
@@ -87,8 +89,8 @@ export default function Home() {
     if (searchText.trim()) {
       if (searchPage < searchTotalPages && !searchLoading) {
         searchCards(
-          searchPage + 1,
-          10,
+          searchPage + perPage,
+          perPage,
           [
             {
               basicSearchKey: "title",
@@ -106,7 +108,7 @@ export default function Home() {
         if (selectedTimeline) {
           fetchCardsByTimeline(currentPage + 1, 10, true, selectedTimeline);
         } else {
-          fetchCards(currentPage + 1, 10, true);
+          fetchCards(currentPage + 1, perPage, true);
         }
       }
     }
@@ -137,144 +139,172 @@ export default function Home() {
   const activeTotalPages = searchText.trim() ? searchTotalPages : totalPages;
 
   return (
-    <div className="font-sans text-gray-900">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-16 sm:py-20 md:py-24 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto text-center">
-          {/* Logo + Title */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            <img
-              src="/download.png"
-              alt="logo"
-              className="w-12 h-12 sm:w-14 sm:h-14 md:w-20 md:h-20 object-contain"
-            />
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+      {/* --- HERO SECTION --- */}
+      <section className="relative bg-slate-900 text-white px-6 overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
+        </div>
+
+        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-16">
+          <div className="flex flex-col items-center gap-6 mb-6">
+            <div className="p-2 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
+              <img src="/download.png" className="h-20 w-20 object-contain" />
+            </div>
+
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-200">
               My Diary
             </h1>
           </div>
 
-          {/* Subtitle */}
-          <p className="text-sm sm:text-base md:text-xl mt-4 mb-8 sm:mb-10 max-w-xl sm:max-w-2xl mx-auto text-blue-100 leading-relaxed">
-            Your diary. Organized, secure, and always at your fingertips.
+          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            Capture your thoughts, relive your moments, and preserve your
+            memories in a clean, beautiful timeline.
           </p>
 
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <button
               onClick={() => setShowModal(true)}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+              className="px-6 py-3 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-md"
             >
-              + Create New Diary
+              + Create Diary
             </button>
 
             <button
               onClick={() => navigate("/timeline")}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl shadow-lg hover:scale-105 hover:bg-gray-100 transition-all duration-200"
+              className="px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all"
             >
-              Add New Timeline
+              Add Timeline
             </button>
           </div>
         </div>
       </section>
 
-      {/* Search Bar */}
-      <section className="py-6 px-6 max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
-          <input
-            type="text"
-            placeholder="Search cards..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
-            className="px-4 py-2 border rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={handleSearch}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Search
-          </button>
-        </div>
-      </section>
+      {/* --- TOOLBAR --- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 flex gap-4">
+          {/* Search */}
+          <div className="relative w-full">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+            <input
+              type="text"
+              placeholder="Search entries..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
 
-      {/* Timeline Filter Bar */}
-      <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
-        <button
-          onClick={() => {
-            fetchCards(1, 10, false);
-            setSelectedTimeline(null);
-            clearSearch();
-            setSearchText("");
-          }}
-          className="absolute mt-14 right-3 bg-gray-800 hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800 z-100"
-        >
-          Reset
-        </button>
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Per Page Selector */}
+            <div className="relative w-full sm:w-40">
+              <select
+                value={perPage}
+                onChange={(e) => setPerPage(Number(e.target.value))}
+                className="w-full appearance-none bg-gray-50 pl-4 pr-10 py-3 rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option value="10">10 / page</option>
+                <option value="20">20 / page</option>
+                <option value="50">50 / page</option>
+                <option value="100">100 / page</option>
+              </select>
 
-        <div className="relative min-w-max py-8 px-4">
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
+              <ChevronDown
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+              />
+            </div>
 
-          <div className="flex items-center gap-24 relative z-10">
-            {timelineCards
-              .sort((a, b) => b.year - a.year)
-              .map((timeline) => {
-                const isSelected = selectedTimeline === timeline.id;
+            {/* Existing Buttons */}
+            <button
+              onClick={handleSearch}
+              className="flex-1 sm:flex-none px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+            >
+              Search
+            </button>
 
-                return (
-                  <button
-                    key={timeline.id}
-                    onClick={() => handleTimelineClick(timeline)}
-                    className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
-                  >
-                    <span
-                      className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
-                        isSelected
-                          ? "text-blue-600 scale-110"
-                          : "text-gray-500 group-hover:text-blue-500"
-                      }`}
-                    >
-                      {timeline.timeline}
-                    </span>
-                    <div
-                      className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
-                        isSelected
-                          ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
-                          : "bg-white border-gray-300 group-hover:border-blue-400 group-hover:scale-110"
-                      }`}
-                    />
-                  </button>
-                );
-              })}
+            <button
+              onClick={() => {
+                setSearchText("");
+                setSelectedTimeline(null);
+                clearSearch();
+                fetchCards(1, perPage, false);
+              }}
+              className="flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
+            >
+              <RotateCcw size={20} />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Cards Section */}
-      <section className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">
-            {searchText.trim() ? "Search Results" : "My Diaries"}
-          </h2>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-          >
-            + New Diary
-          </button>
+      {/* --- TIMELINE --- */}
+      <section className="py-12 px-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold text-gray-800">Timeline Filter</h2>
         </div>
 
+        <div className="overflow-x-auto">
+          <div className="relative min-w-max py-8 px-4">
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 rounded-full" />
+
+            <div className="flex items-center gap-24 relative z-10">
+              {timelineCards
+                .sort((a, b) => b.year - a.year)
+                .map((timeline) => {
+                  const isSelected = selectedTimeline === timeline.id;
+
+                  return (
+                    <button
+                      key={timeline.id}
+                      onClick={() => handleTimelineClick(timeline)}
+                      className="group relative flex flex-col items-center"
+                    >
+                      <span
+                        className={`absolute -top-8 -left-1 whitespace-nowrap font-medium transition-all ${
+                          isSelected
+                            ? "text-blue-600 scale-110"
+                            : "text-gray-500 group-hover:text-blue-500"
+                        }`}
+                      >
+                        {timeline.timeline}
+                      </span>
+
+                      <div
+                        className={`w-5 h-5 rounded-full border-4 transition-all ${
+                          isSelected
+                            ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
+                            : "bg-white border-gray-300 group-hover:border-blue-400"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- CARDS --- */}
+      <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">
         {activeLoading && activeCards.length === 0 ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="h-64 bg-gray-200 animate-pulse rounded-2xl"
+              />
+            ))}
           </div>
         ) : activeCards.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-            <p className="text-gray-500 mb-4">
-              {searchText.trim() ? "No results found." : "No cards found yet."}
+          <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-gray-500">
+              {searchText.trim() ? "No results found." : "No entries yet."}
             </p>
           </div>
         ) : (
@@ -288,7 +318,7 @@ export default function Home() {
                 items={activeCards.map((c) => c._id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                   {activeCards.map((card) => (
                     <CardItem key={card._id} id={card._id} card={card} />
                   ))}
@@ -296,37 +326,25 @@ export default function Home() {
               </SortableContext>
             </DndContext>
 
-            {activeCurrentPage < activeTotalPages && (
-              <div className="flex justify-center mt-10">
+            {/* Pagination */}
+            <div className="mt-16 flex flex-col items-center gap-4">
+              <p className="text-sm text-gray-500">
+                Page <span className="text-gray-900">{activeCurrentPage}</span>{" "}
+                of <span className="text-gray-900">{activeTotalPages}</span>
+              </p>
+
+              {activeCurrentPage < activeTotalPages && (
                 <button
                   onClick={handleLoadMore}
                   disabled={activeLoading}
-                  className={`px-8 py-3 font-bold rounded-lg transition-all shadow-md ${
-                    activeLoading
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-100 text-blue-700 hover:bg-blue-200 hover:shadow-lg"
-                  }`}
+                  className="px-8 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
                 >
                   {activeLoading ? "Loading..." : "Load More"}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-center rounded-xl max-w-7xl mx-auto my-10">
-        <h3 className="text-3xl font-bold mb-4">Ready to get started?</h3>
-        <p className="mb-6 text-lg">
-          Create your first Diary and see how easy it is to stay organized.
-        </p>
-        <button
-          onClick={() => setShowModal(true)}
-          className="px-6 py-3 bg-white text-indigo-600 font-bold rounded-lg shadow-lg hover:bg-gray-100 transition-all"
-        >
-          + Create Diary Now
-        </button>
       </section>
 
       {/* Modal */}

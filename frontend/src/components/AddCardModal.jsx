@@ -1,14 +1,15 @@
-import { ImageIcon, Upload, X } from "lucide-react";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { Upload, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCardStore } from "../store/cardStore";
-import { useTimelineCardStore } from "../store/timelineCardStore"; // Import timeline store
+import { useTimelineCardStore } from "../store/timelineCardStore";
+import RichTextEditor from "./RichTextEditor";
 
 export default function AddCardModal({ parentId, isOpen, onClose }) {
   const createCard = useCardStore((s) => s.createCard);
   const fetchCards = useCardStore((s) => s.fetchCards);
   const fetchChildCards = useCardStore((s) => s.fetchChildCards);
 
-  const { timelineCards, fetchTimelineCards } = useTimelineCardStore(); // Get timeline cards
+  const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -16,14 +17,13 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
     url: "",
     image: "",
     category: "",
-    timelineId: 0, // Selected timeline ID
+    timelineId: 0,
   });
 
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Fetch timelines on mount
   useEffect(() => {
     fetchTimelineCards();
   }, [fetchTimelineCards]);
@@ -33,12 +33,13 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle timeline select
   const handleTimelineChange = (e) => {
-    setFormData((prev) => ({ ...prev, timelineId: Number(e.target.value) }));
+    setFormData((prev) => ({
+      ...prev,
+      timelineId: Number(e.target.value),
+    }));
   };
 
-  // Convert file to Base64
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       if (!file.type.startsWith("image/"))
@@ -65,6 +66,7 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
 
   const handleFileInputChange = (e) => handleFileSelect(e.target.files[0]);
   const handleClickUpload = () => fileInputRef.current?.click();
+
   const handleRemoveImage = () => {
     setFormData((prev) => ({ ...prev, image: "" }));
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -72,21 +74,20 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
 
   const handleDragEnter = useCallback((e) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(true);
   }, []);
+
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(false);
   }, []);
+
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
-    e.stopPropagation();
   }, []);
+
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(false);
     handleFileSelect(e.dataTransfer.files[0]);
   }, []);
@@ -110,6 +111,7 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
     setLoading(true);
     try {
       await createCard(formData, parentId);
+
       if (parentId) await fetchChildCards(parentId);
       else await fetchCards();
 
@@ -121,7 +123,9 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
         category: "",
         timelineId: 0,
       });
+
       if (fileInputRef.current) fileInputRef.current.value = "";
+
       onClose();
     } finally {
       setLoading(false);
@@ -141,7 +145,9 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
       />
 
       <div className="relative z-10 w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600">
+
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600">
           <div>
             <h2 className="text-xl font-bold text-white">
               {parentId ? "Add Sub Card" : "Create New Card"}
@@ -152,19 +158,22 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
                 : "Fill in the details below"}
             </p>
           </div>
+
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white"
+            className="p-1.5 rounded-lg hover:bg-white/20 text-white"
           >
             <X size={20} />
           </button>
         </div>
 
+        {/* FORM */}
         <form
           onSubmit={handleSubmit}
           className="p-6 space-y-5 max-h-[70vh] overflow-y-auto"
         >
-          {/* Title */}
+
+          {/* TITLE */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Title <span className="text-red-500">*</span>
@@ -176,11 +185,11 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
               onChange={handleChange}
               placeholder="Enter card title..."
               required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          {/* Timeline Dropdown */}
+          {/* TIMELINE */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Timeline
@@ -188,7 +197,7 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
             <select
               value={formData.timelineId}
               onChange={handleTimelineChange}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             >
               <option value={0}>Select Timeline</option>
               {timelineCards.map((t) => (
@@ -199,18 +208,17 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
             </select>
           </div>
 
-          {/* Description */}
+          {/* DESCRIPTION (TIPTAP) */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Description
             </label>
-            <textarea
-              name="description"
+
+            <RichTextEditor
               value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe this card..."
-              rows={3}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none placeholder:text-gray-400"
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, description: value }))
+              }
             />
           </div>
 
@@ -225,17 +233,16 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
               value={formData.url}
               onChange={handleChange}
               placeholder="https://example.com"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          {/* Image Upload - Drag & Drop + Click */}
+          {/* IMAGE */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Image
             </label>
 
-            {/* Hidden input */}
             <input
               type="file"
               ref={fileInputRef}
@@ -245,91 +252,68 @@ export default function AddCardModal({ parentId, isOpen, onClose }) {
             />
 
             {formData.image ? (
-              // ✅ Preview
-              <div className="relative group rounded-lg overflow-hidden border-2 border-gray-200">
+              <div className="relative group rounded-lg overflow-hidden border-2">
                 <img
                   src={formData.image}
-                  alt="Preview"
                   className="w-full h-48 object-cover"
                 />
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleClickUpload}
-                    className="px-3 py-1.5 bg-white rounded-lg text-sm"
-                  >
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex justify-center items-center gap-3">
+                  <button onClick={handleClickUpload} className="bg-white px-3 py-1 rounded">
                     Change
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm"
-                  >
+                  <button onClick={handleRemoveImage} className="bg-red-500 text-white px-3 py-1 rounded">
                     Remove
                   </button>
                 </div>
               </div>
             ) : (
-              // ✅ Drop zone
               <div
                 onClick={handleClickUpload}
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
-                className={`w-full h-40 border-2 border-dashed rounded-lg cursor-pointer
-        flex flex-col items-center justify-center gap-2 transition
-        ${
-          isDragging
-            ? "border-blue-500 bg-blue-50"
-            : "border-gray-300 hover:border-blue-400 hover:bg-gray-50"
-        }`}
+                className={`h-40 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer ${
+                  isDragging ? "border-blue-500 bg-blue-50" : ""
+                }`}
               >
-                <Upload size={28} className="text-gray-400" />
-                <p className="text-sm text-gray-600">
-                  Click or drag image here
-                </p>
-                <p className="text-xs text-gray-400">PNG, JPG (max 5MB)</p>
+                <Upload className="text-gray-400" />
+                <p className="text-sm">Click or drag image</p>
               </div>
             )}
           </div>
 
-          {/* Category */}
+          {/* CATEGORY */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Category
             </label>
             <input
-              type="text"
               name="category"
               value={formData.category}
               onChange={handleChange}
-              placeholder="e.g. Design, Development"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Submit */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-            >
+          {/* BUTTONS */}
+          <div className="flex justify-end gap-3">
+            <button onClick={onClose} type="button" className="px-4 py-2 bg-gray-100 rounded">
               Cancel
             </button>
+
             <button
               type="submit"
-              disabled={loading || !formData.title.trim()}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded"
             >
-              {loading ? "Creating..." : "Create Card"}
+              {loading ? "Creating..." : "Create"}
             </button>
           </div>
+
         </form>
       </div>
     </div>
   );
-}
+} 

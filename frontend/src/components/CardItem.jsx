@@ -1,8 +1,8 @@
-import { ExternalLink, Trash, Move } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useCardStore } from "../store/cardStore";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ExternalLink, Move, Trash } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useCardStore } from "../store/cardStore";
 
 export default function CardItem({ card, id }) {
   const navigate = useNavigate();
@@ -78,13 +78,17 @@ export default function CardItem({ card, id }) {
         </div>
 
         {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 flex-grow line-clamp-3">
-          {card.description}
-        </p>
+        <p
+          className="text-gray-600 prose max-w-none text-sm mb-4 flex-grow line-clamp-3"
+          dangerouslySetInnerHTML={{ __html: card.description }}
+        />
 
         <div>
           {card?.timelineData?.[0]?.timeline && (
-            <span key={card?.timelineData?.[0]?.id} className="text-xs font-bold text-gray-600 whitespace-nowrap">
+            <span
+              key={card?.timelineData?.[0]?.id}
+              className="text-xs font-bold text-gray-600 whitespace-nowrap"
+            >
               Timeline {card?.timelineData?.[0]?.timeline}
             </span>
           )}

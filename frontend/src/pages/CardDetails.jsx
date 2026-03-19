@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -10,18 +11,18 @@ import {
   UploadCloud,
   X,
 } from "lucide-react";
-import { DndContext, closestCenter } from "@dnd-kit/core";
 
 import {
   SortableContext,
-  rectSortingStrategy,
   arrayMove,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
+import RichTextEditor from "../components/RichTextEditor";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 
@@ -53,7 +54,7 @@ export default function CardDetails() {
     updateCard,
     totalChildren,
     loading,
-    reorderChildCards
+    reorderChildCards,
   } = useCardStore();
 
   // Timeline store
@@ -275,9 +276,10 @@ export default function CardDetails() {
                 )}
               </div>
 
-              <p className="text-gray-600 text-lg mb-6 leading-relaxed whitespace-pre-line">
-                {cardDetails.description}
-              </p>
+              <div
+                className="prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: cardDetails.description }}
+              />
 
               {cardDetails.timelineId && (
                 <p className="text-gray-500 mb-2">
@@ -393,12 +395,16 @@ export default function CardDetails() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
-                <textarea
+                {/* <textarea
                   name="description"
                   value={editFormData.description}
                   onChange={handleFormChange}
                   rows="4"
                   className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                /> */}
+                <RichTextEditor
+                  value={editFormData.description}
+                  onChange={handleFormChange}
                 />
               </div>
 

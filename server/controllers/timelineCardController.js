@@ -1,18 +1,39 @@
 import timelineCardRepository from "../repositories/timelineCardRepository.js";
+import sharp from "sharp";
+import { uploadImage } from "../utils/uploadToCloudinary.js";
 
-/**
- * Create a new TimelineCard
- */
 export const createTimelineCard = async (req, res) => {
   try {
-    const { timeline } = req.body;
+    const { timeline, image, note } = req.body;
 
     if (!timeline) {
       return res.status(400).json({ error: "Timeline is required" });
     }
 
+    let uploadedImage = { url: "", public_id: "" };
+
+    // ✅ Handle image (same as before)
+    if (image && image.startsWith("data:image")) {
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const optimizedBuffer = await sharp(buffer)
+        .resize(1200, 800)
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
+      const processedBase64 = `data:image/jpeg;base64,${optimizedBuffer.toString(
+        "base64"
+      )}`;
+
+      uploadedImage = await uploadImage(processedBase64, "timeline");
+    }
+
+    // ✅ Pass everything to repo
     const newCard = await timelineCardRepository.createCard({
       timeline,
+      image: uploadedImage,
+      note: note || "",
     });
 
     res.status(201).json(newCard);
@@ -58,15 +79,44 @@ export const getTimelineCardById = async (req, res) => {
  */
 export const updateTimelineCard = async (req, res) => {
   try {
-    const { timeline } = req.body;
+    const { timeline, image, note } = req.body;
 
     if (!timeline) {
       return res.status(400).json({ error: "Timeline is required" });
     }
 
+    let uploadedImage = undefined;
+
+    // ✅ Handle image upload
+    if (image && image.startsWith("data:image")) {
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      const optimizedBuffer = await sharp(buffer)
+        .resize(1200, 800)
+        .jpeg({ quality: 85 })
+        .toBuffer();
+
+      const processedBase64 = `data:image/jpeg;base64,${optimizedBuffer.toString(
+        "base64"
+      )}`;
+
+      uploadedImage = await uploadImage(processedBase64, "timeline");
+    }
+
+    const updateData = {
+      timeline,
+      note,
+    };
+
+    // ✅ only update image if provided
+    if (uploadedImage) {
+      updateData.image = uploadedImage;
+    }
+
     const updatedCard = await timelineCardRepository.updateCard(
       req.params.id,
-      { timeline }
+      updateData
     );
 
     if (!updatedCard) {

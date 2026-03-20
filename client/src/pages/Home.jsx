@@ -19,7 +19,8 @@ export default function Home() {
   } = useCardStore();
 
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
-  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } = useTimelineDetailStore();
+  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } =
+    useTimelineDetailStore();
 
   const {
     searchResults,
@@ -109,103 +110,62 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
-      {/* <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
-        <div className="absolute right-5 text-sm flex gap-2">
-          <a
-            href="https://marudhararts.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h1 className="text-sm cursor-pointer hover:text-red-300">
-              Contact
-            </h1>
-          </a>
-          <h1
-            className="text-sm cursor-pointer hover:text-red-300"
-            onClick={() => navigate("/about")}
-          >
-            About
-          </h1>
-        </div>
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
-
-        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-10">
-          <div className="flex flex-col items-center gap-6 mb-6">
-            <div className="p-1 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
-              <img
-                src="/download.png"
-                alt="logo"
-                className="h-20 w-20 object-contain"
-              />
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-200">
-              My Diary
-            </h1>
-          </div>
-
-          <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Capture your thoughts, relive your moments, and preserve your
-            memories in a clean, beautiful timeline.
-          </p>
-        </div>
-      </section> */}
-
       <HeroSlider />
 
       {/* --- TOOLBAR: SEARCH & LIMIT --- */}
-      <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 flex flex-col md:flex-row gap-4 items-center">
-          {/* Search Input */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4">
+          {/* Search */}
           <div className="relative w-full">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
+              className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={16}
             />
             <input
               type="text"
-              placeholder="Search entries..."
+              placeholder="Search..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full md:pl-11 md:pr-4 md:py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"
+              className="w-full pl-9 sm:pl-11 pr-3 py-2 sm:py-3 text-sm sm:text-base bg-gray-50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* Limit Selector */}
-            <div className="relative flex-1 md:w-32">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+            {/* Per Page Selector */}
+            <div className="relative w-full sm:w-36">
               <select
                 value={perPage}
                 onChange={(e) => setPerPage(Number(e.target.value))}
-                className="w-full appearance-none bg-gray-50 pl-4 pr-10 py-3 rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full appearance-none bg-gray-50 pl-3 sm:pl-4 pr-8 py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="10">10 / page</option>
                 <option value="20">20 / page</option>
                 <option value="50">50 / page</option>
                 <option value="100">100 / page</option>
               </select>
+
               <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={14}
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
 
-            {/* Actions */}
+            {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-base bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
             >
               Search
             </button>
+
+            {/* Reset Button */}
             <button
               onClick={handleReset}
-              className="p-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
-              title="Reset Filters"
+              className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all"
             >
-              <RotateCcw size={20} />
+              <RotateCcw size={18} />
             </button>
           </div>
         </div>
@@ -285,7 +245,7 @@ export default function Home() {
             )}
           </div>
         </section>
-      ): null}
+      ) : null}
 
       {/* --- CARDS GRID --- */}
       <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">

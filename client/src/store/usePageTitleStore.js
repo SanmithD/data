@@ -1,4 +1,3 @@
-import toast from "react-hot-toast";
 import { create } from "zustand";
 import api from "../api/axios";
 
@@ -23,7 +22,7 @@ export const usePageTitleStore = create((set) => ({
       });
     } catch (err) {
       console.error("Fetch pageTitles error:", err);
-      toast.error("Failed to fetch page titles");
+      // toast.error("Failed to fetch page titles");
       set({ loading: false });
     }
   },

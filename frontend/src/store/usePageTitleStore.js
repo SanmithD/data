@@ -23,7 +23,7 @@ export const usePageTitleStore = create((set) => ({
       });
     } catch (err) {
       console.error("Fetch pageTitles error:", err);
-      toast.error("Failed to fetch page titles");
+    //   toast.error("Failed to fetch page titles");
       set({ loading: false });
     }
   },

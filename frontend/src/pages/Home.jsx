@@ -146,7 +146,7 @@ export default function Home() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
-        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-16">
+        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-15">
           <div className="flex flex-col items-center gap-6 mb-6">
             <div className="p-2 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
               <img src="/download.png" className="h-20 w-20 object-contain" />
@@ -191,7 +191,7 @@ export default function Home() {
             />
             <input
               type="text"
-              placeholder="Search entries..."
+              placeholder="Search..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}

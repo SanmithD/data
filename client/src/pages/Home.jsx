@@ -5,6 +5,7 @@ import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const {
@@ -26,6 +27,7 @@ export default function Home() {
     clearSearch,
   } = useCardSearchStore();
 
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -104,11 +106,22 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
       <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
+        <div className="absolute right-5 text-sm flex gap-2">
+          <a href="https://marudhararts.com/contact" target="__blank">
+            <h1 className="text-sm cursor-pointer">Contact</h1>
+          </a>  
+          <h1
+            className="text-sm cursor-pointer"
+            onClick={() => navigate("/about")}
+          >
+            About
+          </h1>
+        </div>
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
-        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-16">
+        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-10">
           <div className="flex flex-col items-center gap-6 mb-6">
             {/* Logo */}
             <div className="p-1 rounded-2xl bg-white shadow-xl shadow-gray-200/40">

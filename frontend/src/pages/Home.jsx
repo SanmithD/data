@@ -41,7 +41,8 @@ export default function Home() {
     clearSearch,
   } = useCardSearchStore();
 
-  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } = useTimelineDetailStore();
+  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } =
+    useTimelineDetailStore();
 
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
@@ -203,12 +204,12 @@ export default function Home() {
 
       {/* --- TOOLBAR --- */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-5 flex gap-4">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4">
           {/* Search */}
           <div className="relative w-full">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={18}
+              className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={16}
             />
             <input
               type="text"
@@ -216,18 +217,18 @@ export default function Home() {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full pl-11 pr-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-9 sm:pl-11 pr-3 py-2 sm:py-3 text-sm sm:text-base bg-gray-50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Per Page Selector */}
-            <div className="relative w-full sm:w-40">
+            <div className="relative w-full sm:w-36">
               <select
                 value={perPage}
                 onChange={(e) => setPerPage(Number(e.target.value))}
-                className="w-full appearance-none bg-gray-50 pl-4 pr-10 py-3 rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full appearance-none bg-gray-50 pl-3 sm:pl-4 pr-8 py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="10">10 / page</option>
                 <option value="20">20 / page</option>
@@ -236,19 +237,20 @@ export default function Home() {
               </select>
 
               <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={14}
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
 
-            {/* Existing Buttons */}
+            {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="flex-1 sm:flex-none px-5 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+              className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-base bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
             >
               Search
             </button>
 
+            {/* Reset Button */}
             <button
               onClick={() => {
                 setSearchText("");
@@ -258,9 +260,9 @@ export default function Home() {
                 fetchCards(1, perPage, false);
                 useTimelineDetailStore.setState({ timelineDetail: null });
               }}
-              className="flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
+              className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all"
             >
-              <RotateCcw size={20} />
+              <RotateCcw size={18} />
             </button>
           </div>
         </div>
@@ -330,7 +332,7 @@ export default function Home() {
             )}
           </div>
         </section>
-      ): null}
+      ) : null}
 
       {/* --- CARDS --- */}
       <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">

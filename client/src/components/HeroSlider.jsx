@@ -17,7 +17,7 @@ export default function HeroSlider() {
   const hasImages = slider?.images && slider.images.length > 0;
 
   return (
-    <section className="relative w-full h-[75vh] overflow-hidden text-white">
+    <section className="relative w-full h-[30vh] md:h-[75vh] overflow-hidden text-white">
       {/* ===== BACKGROUND SLIDER ===== */}
       {hasImages && (
         <div className="absolute inset-0 z-0">

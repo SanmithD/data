@@ -108,10 +108,10 @@ export default function Home() {
       <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
         <div className="absolute right-5 text-sm flex gap-2">
           <a href="https://marudhararts.com/contact" target="__blank">
-            <h1 className="text-sm cursor-pointer">Contact</h1>
+            <h1 className="text-sm cursor-pointer hover:text-red-300">Contact</h1>
           </a>  
           <h1
-            className="text-sm cursor-pointer"
+            className="text-sm cursor-pointer hover:text-red-300"
             onClick={() => navigate("/about")}
           >
             About

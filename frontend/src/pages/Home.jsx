@@ -142,6 +142,17 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
       <section className="relative bg-slate-900 text-white px-6 overflow-hidden">
+        <div className="absolute right-5 top-5 text-sm flex gap-2">
+          <a href="https://marudhararts.com/contact" target="__blank">
+            <h1 className="text-sm cursor-pointer hover:text-red-300">Contact</h1>
+          </a>  
+          <h1
+            className="text-sm cursor-pointer hover:text-red-300"
+            onClick={() => navigate("/about")}
+          >
+            About
+          </h1>
+        </div>
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
         </div>

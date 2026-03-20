@@ -1,13 +1,13 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { DndContext, closestCenter } from "@dnd-kit/core";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
   ArrowLeft,
   Edit,
   ExternalLink,
   Image as ImageIcon,
+  Pen,
   Save,
+  Trash,
   UploadCloud,
   X,
 } from "lucide-react";
@@ -25,6 +25,7 @@ import CardItem from "../components/CardItem";
 import RichTextEditor from "../components/RichTextEditor";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
+import { usePageTitleStore } from "../store/usePageTitleStore";
 
 export default function CardDetails() {
   const { id } = useParams();
@@ -60,6 +61,17 @@ export default function CardDetails() {
   // Timeline store
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
 
+  const {
+    pageTitles,
+    fetchPageTitles,
+    createPageTitle,
+    updatePageTitle,
+    deletePageTitle,
+  } = usePageTitleStore();
+
+  const [editingTitleId, setEditingTitleId] = useState(null);
+  const [titleInput, setTitleInput] = useState("");
+
   // Local state to track page
   const [childPage, setChildPage] = useState(1);
 
@@ -90,6 +102,12 @@ export default function CardDetails() {
       });
     }
   }, [cardDetails, isEditing]);
+
+  useEffect(() => {
+    if (id) {
+      fetchPageTitles(id); // 👈 parentCardId = current card
+    }
+  }, [id, fetchPageTitles]);
 
   // Handle load more
   const handleLoadMoreChildren = () => {
@@ -172,33 +190,33 @@ export default function CardDetails() {
     XLSX.writeFile(workbook, "sub_diaries.xlsx");
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = [
-      "Title",
-      "Description",
-      "Category",
-      "URL",
-      "Timeline",
-      "Created",
-    ];
-    const tableRows = [];
+  // const exportToPDF = () => {
+  //   const doc = new jsPDF();
+  //   const tableColumn = [
+  //     "Title",
+  //     "Description",
+  //     "Category",
+  //     "URL",
+  //     "Timeline",
+  //     "Created",
+  //   ];
+  //   const tableRows = [];
 
-    childCards.forEach((card) => {
-      tableRows.push([
-        card.title,
-        card.description,
-        card.category,
-        card.url,
-        card.timelineId || "",
-        new Date(card.createdAt).toLocaleDateString(),
-      ]);
-    });
+  //   childCards.forEach((card) => {
+  //     tableRows.push([
+  //       card.title,
+  //       card.description,
+  //       card.category,
+  //       card.url,
+  //       card.timelineId || "",
+  //       new Date(card.createdAt).toLocaleDateString(),
+  //     ]);
+  //   });
 
-    doc.text("Sub Diaries", 14, 15);
-    autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
-    doc.save("sub_diaries.pdf");
-  };
+  //   doc.text("Sub Diaries", 14, 15);
+  //   autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
+  //   doc.save("sub_diaries.pdf");
+  // };
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
@@ -211,6 +229,40 @@ export default function CardDetails() {
     const newOrder = arrayMove(childCards, oldIndex, newIndex);
 
     reorderChildCards(newOrder); // 🔥 IMPORTANT
+  };
+
+  const handleAddTitle = async () => {
+    if (!titleInput.trim()) return;
+
+    // prevent multiple titles
+    if (pageTitles.length > 0) return;
+
+    await createPageTitle({
+      title: titleInput,
+      parentCardId: id,
+    });
+
+    setEditingTitleId(null);
+    setTitleInput("");
+  };
+
+  const handleUpdateTitle = async (titleId) => {
+    if (!titleInput.trim()) return;
+
+    await updatePageTitle(titleId, { title: titleInput });
+
+    setEditingTitleId(null);
+    setTitleInput("");
+  };
+
+  const handleDeleteTitle = async (titleId) => {
+    if (confirm("Delete this title?")) {
+      await deletePageTitle(titleId);
+
+      // fallback to default
+      setEditingTitleId(null);
+      setTitleInput("");
+    }
   };
 
   if (!cardDetails) {
@@ -486,7 +538,60 @@ export default function CardDetails() {
       {/* Sub-Cards */}
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Sub Diaries</h2>
+          <div className="flex items-center gap-2 justify-between mb-4">
+            {/* LEFT SIDE */}
+            <div className="flex items-center gap-3">
+              {editingTitleId ? (
+                <input
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  className="border p-2 rounded"
+                  placeholder="Enter title"
+                />
+              ) : (
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {pageTitles.length > 0 ? pageTitles[0].title : "Sub Diaries"}
+                </h2>
+              )}
+            </div>
+
+            {/* RIGHT SIDE ACTIONS */}
+            <div className="flex gap-2">
+              {editingTitleId ? (
+                <button
+                  onClick={() =>
+                    pageTitles.length > 0
+                      ? handleUpdateTitle(pageTitles[0]._id)
+                      : handleAddTitle()
+                  }
+                  className="text-green-600 cursor-pointer font-medium"
+                >
+                  <Save size={18} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setEditingTitleId(true);
+                    setTitleInput(
+                      pageTitles.length > 0 ? pageTitles[0].title : "",
+                    );
+                  }}
+                  className="text-blue-600 cursor-pointer"
+                >
+                  <Pen size={18} />
+                </button>
+              )}
+
+              {pageTitles.length > 0 && !editingTitleId && (
+                <button
+                  onClick={() => handleDeleteTitle(pageTitles[0]._id)}
+                  className="text-red-600 cursor-pointer"
+                >
+                  <Trash size={18} />
+                </button>
+              )}
+            </div>
+          </div>
 
           <div className="flex gap-3">
             <button
@@ -496,12 +601,12 @@ export default function CardDetails() {
               Export Excel
             </button>
 
-            <button
+            {/* <button
               onClick={exportToPDF}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               Export PDF
-            </button>
+            </button> */}
 
             <button
               onClick={() => setShowModal(true)}

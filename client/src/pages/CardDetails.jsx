@@ -6,6 +6,7 @@ import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
+import { usePageTitleStore } from "../store/usePageTitleStore";
 
 export default function CardDetails() {
   const { id } = useParams();
@@ -22,6 +23,11 @@ export default function CardDetails() {
     loading,
   } = useCardStore();
 
+  const {
+      pageTitles,
+      fetchPageTitles
+    } = usePageTitleStore();
+
   // Timeline store
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
 
@@ -36,6 +42,12 @@ export default function CardDetails() {
       fetchChildCards(id, 1, 10, false);
     }
   }, [id, fetchCardById, fetchChildCards]);
+
+  useEffect(() => {
+    if (id) {
+      fetchPageTitles(id); // 👈 parentCardId = current card
+    }
+  }, [id, fetchPageTitles]);
 
   // Fetch timelines
   useEffect(() => {
@@ -138,7 +150,9 @@ export default function CardDetails() {
       {/* Sub-Cards */}
       <div className="mt-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Sub Diaries</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {pageTitles.length > 0 ? pageTitles[0].title : "Sub Diaries"}
+          </h2>
         </div>
 
         {loading && childCards.length === 0 ? (

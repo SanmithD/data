@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import { connectRedis } from './config/redis.js';
 import cardRoutes from "./routes/cardRoutes.js";
 import timeRouter from './routes/timelineCardRoutes.js';
+import pageTitleRouter from './routes/pageTitleRoutes.js';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get('/', (req, res) => {
 
 app.use("/api", cardRoutes);
 app.use("/api", timeRouter);
+app.use("/api/page", pageTitleRouter);
 
 const PORT = process.env.PORT;
 

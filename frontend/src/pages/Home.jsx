@@ -12,12 +12,13 @@ import {
 } from "@dnd-kit/sortable";
 import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
+import HeroSlider from "../components/HeroSlider";
+import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
 
 export default function Home() {
   const {
@@ -40,7 +41,8 @@ export default function Home() {
     clearSearch,
   } = useCardSearchStore();
 
-  const navigate = useNavigate();
+  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } = useTimelineDetailStore();
+
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -57,6 +59,7 @@ export default function Home() {
   // Timeline click handler
   const handleTimelineClick = (timeline) => {
     setSelectedTimeline(timeline.id);
+    fetchTimelineDetail(timeline.id);
     fetchCardsByTimeline(1, perPage, false, timeline.id);
     clearSearch(); // clear search when timeline selected
     setSearchText("");
@@ -141,11 +144,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
-      <section className="relative bg-slate-900 text-white px-6 overflow-hidden">
+      {/* <section className="relative bg-slate-900 text-white px-6 overflow-hidden">
         <div className="absolute right-5 top-5 text-sm flex gap-2">
-          <a href="https://marudhararts.com/contact" target="__blank">
-            <h1 className="text-sm cursor-pointer hover:text-red-300">Contact</h1>
-          </a>  
+          <a
+            href="https://marudhararts.com/contact"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <h1 className="text-sm cursor-pointer hover:text-red-300">
+              Contact
+            </h1>
+          </a>
           <h1
             className="text-sm cursor-pointer hover:text-red-300"
             onClick={() => navigate("/about")}
@@ -189,7 +198,8 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
+      <HeroSlider setShowModal={setShowModal} />
 
       {/* --- TOOLBAR --- */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
@@ -243,8 +253,10 @@ export default function Home() {
               onClick={() => {
                 setSearchText("");
                 setSelectedTimeline(null);
+                clearTimelineDetail();
                 clearSearch();
                 fetchCards(1, perPage, false);
+                useTimelineDetailStore.setState({ timelineDetail: null });
               }}
               className="flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all"
             >
@@ -300,6 +312,25 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* --- TIMELINE DETAIL IMAGE --- */}
+      {timelineDetail && timelineDetail.image?.url ? (
+        <section className="max-w-7xl mx-auto px-6 mb-8">
+          <div className="bg-white rounded-2xl shadow p-4">
+            <img
+              src={timelineDetail.image.url}
+              alt="timeline"
+              className="w-full max-h-[400px] object-cover rounded-xl"
+            />
+
+            {timelineDetail.note && (
+              <p className="mt-3 text-gray-700 text-sm">
+                {timelineDetail.note}
+              </p>
+            )}
+          </div>
+        </section>
+      ): null}
 
       {/* --- CARDS --- */}
       <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">

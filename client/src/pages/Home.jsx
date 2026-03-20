@@ -5,7 +5,8 @@ import CardItem from "../components/CardItem";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
-import { useNavigate } from "react-router-dom";
+import HeroSlider from "../components/HeroSlider";
+import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
 
 export default function Home() {
   const {
@@ -18,6 +19,8 @@ export default function Home() {
   } = useCardStore();
 
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
+  const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } = useTimelineDetailStore();
+
   const {
     searchResults,
     currentPage: searchPage,
@@ -27,7 +30,6 @@ export default function Home() {
     clearSearch,
   } = useCardSearchStore();
 
-  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
@@ -40,6 +42,7 @@ export default function Home() {
 
   const handleTimelineClick = (timeline) => {
     setSelectedTimeline(timeline.id);
+    fetchTimelineDetail(timeline.id);
     fetchCardsByTimeline(1, perPage, false, timeline.id);
     clearSearch();
     setSearchText("");
@@ -69,6 +72,7 @@ export default function Home() {
   const handleReset = () => {
     setSearchText("");
     setSelectedTimeline(null);
+    clearTimelineDetail();
     clearSearch();
     fetchCards(1, perPage, false);
   };
@@ -105,11 +109,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
-      <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
+      {/* <section className="relative bg-slate-900 text-white py-10 px-6 overflow-hidden">
         <div className="absolute right-5 text-sm flex gap-2">
-          <a href="https://marudhararts.com/contact" target="__blank">
-            <h1 className="text-sm cursor-pointer hover:text-red-300">Contact</h1>
-          </a>  
+          <a
+            href="https://marudhararts.com/contact"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <h1 className="text-sm cursor-pointer hover:text-red-300">
+              Contact
+            </h1>
+          </a>
           <h1
             className="text-sm cursor-pointer hover:text-red-300"
             onClick={() => navigate("/about")}
@@ -123,7 +133,6 @@ export default function Home() {
 
         <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-10">
           <div className="flex flex-col items-center gap-6 mb-6">
-            {/* Logo */}
             <div className="p-1 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
               <img
                 src="/download.png"
@@ -132,19 +141,19 @@ export default function Home() {
               />
             </div>
 
-            {/* Title */}
             <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-200">
               My Diary
             </h1>
           </div>
 
-          {/* Subtitle */}
           <p className="text-gray-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Capture your thoughts, relive your moments, and preserve your
             memories in a clean, beautiful timeline.
           </p>
         </div>
-      </section>
+      </section> */}
+
+      <HeroSlider />
 
       {/* --- TOOLBAR: SEARCH & LIMIT --- */}
       <section className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
@@ -210,6 +219,7 @@ export default function Home() {
             onClick={() => {
               fetchCards(1, 10, false);
               setSelectedTimeline(null);
+              clearTimelineDetail();
               clearSearch();
               setSearchText("");
             }}
@@ -258,6 +268,24 @@ export default function Home() {
           </div>
         </section>
       </section>
+
+      {timelineDetail && timelineDetail.image?.url ? (
+        <section className="max-w-7xl mx-auto px-6 mb-8">
+          <div className="bg-white rounded-2xl shadow p-4">
+            <img
+              src={timelineDetail.image.url}
+              alt="timeline"
+              className="w-full max-h-[400px] object-cover rounded-xl"
+            />
+
+            {timelineDetail.note && (
+              <p className="mt-3 text-gray-700 text-sm">
+                {timelineDetail.note}
+              </p>
+            )}
+          </div>
+        </section>
+      ): null}
 
       {/* --- CARDS GRID --- */}
       <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">

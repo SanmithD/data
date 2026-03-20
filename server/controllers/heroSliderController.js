@@ -28,7 +28,7 @@ export const createSlider = async (req, res) => {
       const buffer = Buffer.from(base64Data, "base64");
 
       const optimizedBuffer = await sharp(buffer)
-        .resize(1920, 1080, { fit: "cover" })
+        .resize(1200, 800, { fit: "cover" })
         .jpeg({ quality: 85 })
         .toBuffer();
 

@@ -17,7 +17,7 @@ export default function HeroSlider({ setShowModal }) {
   const hasImages = slider?.images && slider.images.length > 0;
 
   return (
-    <section className="relative w-full h-[30vh] md:h-[70vh] overflow-hidden text-white">
+    <section className="relative w-full h-[15vh] md:h-[70vh] overflow-hidden text-white">
       {/* ===== BACKGROUND SLIDER ===== */}
       {hasImages && (
         <div className="absolute inset-0 z-0">
@@ -55,7 +55,7 @@ export default function HeroSlider({ setShowModal }) {
       {/* ===== TOP NAV ===== */}
       <div className="absolute right-5 top-5 z-50 flex flex-wrap gap-2 sm:gap-3 md:gap-4 font-bold text-md justify-end">
         <button
-          className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+          className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
     backdrop-blur-md bg-black/40 border border-white/20
     rounded-full hover:bg-black/60 hover:text-red-300
     transition duration-300"
@@ -66,7 +66,7 @@ export default function HeroSlider({ setShowModal }) {
 
         <button
           onClick={() => setShowModal(true)}
-          className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+          className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
     backdrop-blur-md bg-black/40 border border-white/20
     rounded-full hover:bg-black/60 hover:text-red-300
     transition duration-300"
@@ -76,7 +76,7 @@ export default function HeroSlider({ setShowModal }) {
 
         <button
           onClick={() => navigate("/timeline")}
-          className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+          className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
     backdrop-blur-md bg-black/40 border border-white/20
     rounded-full hover:bg-black/60 hover:text-red-300
     transition duration-300"
@@ -90,7 +90,7 @@ export default function HeroSlider({ setShowModal }) {
           rel="noopener noreferrer"
         >
           <h1
-            className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+            className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
       backdrop-blur-md bg-black/40 border border-white/20
       rounded-full hover:bg-black/60 hover:text-red-300
       transition duration-300"
@@ -100,7 +100,7 @@ export default function HeroSlider({ setShowModal }) {
         </a>
 
         <h1
-          className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+          className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
     backdrop-blur-md bg-black/40 border border-white/20
     rounded-full hover:bg-black/60 hover:text-red-300
     transition duration-300"

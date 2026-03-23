@@ -113,13 +113,14 @@ export default function Home() {
       <HeroSlider />
 
       {/* --- TOOLBAR: SEARCH & LIMIT --- */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-20">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-3 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4">
-          {/* Search */}
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 -mt-4 sm:-mt-10 relative z-20">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-2 sm:p-3 md:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
+          {/* Search Input */}
           <div className="relative w-full">
             <Search
-              className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              size={16}
+              className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              size={14}
+              sm-size={16}
             />
             <input
               type="text"
@@ -127,52 +128,75 @@ export default function Home() {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full pl-9 sm:pl-11 pr-3 py-2 sm:py-3 text-sm sm:text-base bg-gray-50 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full pl-8 sm:pl-11 pr-2 sm:pr-3 py-1.5 sm:py-2 md:py-3 
+          text-xs sm:text-sm md:text-base bg-gray-50 rounded-lg sm:rounded-xl 
+          focus:ring-2 focus:ring-blue-500 outline-none border border-gray-200 
+          sm:border-none placeholder:text-gray-400"
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          {/* Actions Row */}
+          <div className="flex flex-row gap-1.5 sm:gap-2 md:gap-3 w-full sm:w-auto">
             {/* Per Page Selector */}
-            <div className="relative w-full sm:w-36">
+            <div className="relative w-full sm:w-32 md:w-36">
               <select
                 value={perPage}
                 onChange={(e) => setPerPage(Number(e.target.value))}
-                className="w-full appearance-none bg-gray-50 pl-3 sm:pl-4 pr-8 py-2 sm:py-3 text-sm sm:text-base rounded-lg sm:rounded-xl font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full appearance-none bg-gray-50 pl-2 sm:pl-3 md:pl-4 
+            pr-6 sm:pr-8 py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base 
+            rounded-lg sm:rounded-xl font-medium text-gray-700 cursor-pointer 
+            focus:ring-2 focus:ring-blue-500 outline-none border border-gray-200 
+            sm:border-none"
               >
                 <option value="10">10 / page</option>
                 <option value="20">20 / page</option>
                 <option value="50">50 / page</option>
                 <option value="100">100 / page</option>
               </select>
-
               <ChevronDown
-                size={14}
-                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                size={12}
+                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 
+            text-gray-400 pointer-events-none"
               />
             </div>
 
             {/* Search Button */}
             <button
               onClick={handleSearch}
-              className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-3 text-sm sm:text-base bg-blue-600 text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+              className="flex-1 sm:flex-none sm:w-auto px-3 sm:px-4 md:px-5 
+          py-1.5 sm:py-2 md:py-3 text-xs sm:text-sm md:text-base bg-blue-600 
+          text-white font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 
+          transition-all shadow-md shadow-blue-200 whitespace-nowrap"
             >
               Search
             </button>
 
             {/* Reset Button */}
             <button
-              onClick={handleReset}
-              className="w-full sm:w-auto flex items-center justify-center px-3 sm:px-4 py-2 sm:py-3 bg-gray-100 text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-200 transition-all"
+              onClick={() => {
+                setSearchText("");
+                setSelectedTimeline(null);
+                clearTimelineDetail();
+                handleReset();
+                clearSearch();
+                fetchCards(1, perPage, false);
+                useTimelineDetailStore.setState({ timelineDetail: null });
+              }}
+              className="px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 md:py-3 
+          bg-gray-100 text-gray-600 rounded-lg sm:rounded-xl 
+          hover:bg-gray-200 transition-all flex items-center justify-center"
             >
-              <RotateCcw size={18} />
+              <RotateCcw
+                size={14}
+                className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]"
+              />
             </button>
           </div>
         </div>
       </section>
 
       {/* --- TIMELINE SECTION --- */}
-      <section className="py-12 px-6 max-w-7xl mx-auto">
+      <section className="py-8 md:py-12 px-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-bold text-gray-800">Timeline Filter</h2>
           <button
@@ -189,7 +213,7 @@ export default function Home() {
           </button>
         </div>
 
-        <section className="py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
+        <section className="py-2 md:py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
           <div className="relative min-w-max py-8 px-4">
             <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
 
@@ -248,7 +272,7 @@ export default function Home() {
       ) : null}
 
       {/* --- CARDS GRID --- */}
-      <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">
+      <section className="py-2 md:py-8 mb-4 px-6 max-w-7xl mx-auto min-h-[400px]">
         {activeLoading && activeCards.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (

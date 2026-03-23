@@ -17,7 +17,7 @@ export default function HeroSlider() {
   const hasImages = slider?.images && slider.images.length > 0;
 
   return (
-    <section className="relative w-full h-[30vh] md:h-[70vh] overflow-hidden text-white">
+    <section className="relative w-full h-[15vh] md:h-[70vh] overflow-hidden text-white">
       {/* ===== BACKGROUND SLIDER ===== */}
       {hasImages && (
         <div className="absolute inset-0 z-0">
@@ -53,14 +53,14 @@ export default function HeroSlider() {
       <div className="absolute inset-0 bg-black/20 z-10" />
 
       {/* ===== TOP NAV ===== */}
-      <div className="absolute right-5 top-5 z-999 flex gap-4 text-sm">
+      <div className="absolute right-5 top-5 z-999 flex gap-0.5 md:gap-4 text-sm">
         <a
           href="https://marudhararts.com/contact"
           target="_blank"
           rel="noopener noreferrer"
         >
           <h1
-            className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+            className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
              backdrop-blur-md bg-black/40 border border-white/20
              rounded-full hover:bg-black/60 hover:text-red-300
              transition duration-300"
@@ -70,7 +70,7 @@ export default function HeroSlider() {
         </a>
 
         <h1
-          className="cursor-pointer px-3 py-1 text-white text-sm font-medium tracking-wide
+          className="cursor-pointer px-3 py-1 text-white text-[12px] md:text-sm font-medium tracking-wide
              backdrop-blur-md bg-black/40 border border-white/20
              rounded-full hover:bg-black/60 hover:text-red-300
              transition duration-300"

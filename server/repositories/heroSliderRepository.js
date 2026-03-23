@@ -75,7 +75,7 @@ export const updateHeroSlider = async (id, images = []) => {
 export const deleteHeroSlider = async (id) => {
   const redis = getRedis();
 
-  const slider = await heroSliderModel.findById({id});
+  const slider = await heroSliderModel.findById(id);
 
   if (!slider) throw new Error("Hero slider not found");
 
@@ -86,7 +86,7 @@ export const deleteHeroSlider = async (id) => {
     }
   }
 
-  await heroSliderModel.findByIdAndDelete({id});
+  await heroSliderModel.findByIdAndDelete(id);
 
   // ❌ Invalidate cache
   await redis.del("heroSlider:latest");

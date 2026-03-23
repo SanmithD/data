@@ -6,64 +6,40 @@ import {
 } from "../repositories/heroSliderRepository.js";
 
 import { uploadImage } from "../utils/uploadToCloudinary.js";
+import cloudinary from "../config/cloudinary.js";
 import { getRedis } from "../config/redis.js";
 import sharp from "sharp";
 
-/**
- * CREATE SLIDER
- */
 export const createSlider = async (req, res) => {
   try {
     const { images } = req.body;
     const redis = getRedis();
-
     const processedImages = [];
 
     for (const base64Image of images) {
-      const base64Data = base64Image.replace(
-        /^data:image\/\w+;base64,/,
-        ""
-      );
+      // ✅ Upload directly, let Cloudinary handle resize
+      const result = await cloudinary.uploader.upload(base64Image, {
+        folder: "hero-slider",
+        transformation: [
+          { width: 1500, height: 500, crop: "fill", quality: 85 }
+        ],
+      });
 
-      const buffer = Buffer.from(base64Data, "base64");
-
-      const optimizedBuffer = await sharp(buffer)
-        .resize(1200, 800, { fit: "cover" })
-        .jpeg({ quality: 85 })
-        .toBuffer();
-
-      const processedBase64 = `data:image/jpeg;base64,${optimizedBuffer.toString(
-        "base64"
-      )}`;
-
-      const uploaded = await uploadImage(
-        processedBase64,
-        "hero-slider"
-      );
-
-      processedImages.push(uploaded);
+      processedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
     }
 
     const slider = await createHeroSlider(processedImages);
-
-    // ❌ Clear cache after create
     await redis.del("heroSlider:latest");
 
-    res.status(201).json({
-      success: true,
-      data: slider,
-    });
+    res.status(201).json({ success: true, data: slider });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * GET SLIDER (WITH CACHE)
- */
 export const getSlider = async (req, res) => {
   try {
     const redis = getRedis();
@@ -118,26 +94,20 @@ export const updateSlider = async (req, res) => {
 
       // ✅ New base64 image
       if (typeof image === "string" && image.startsWith("data:image")) {
-        const base64Data = image.replace(
-          /^data:image\/\w+;base64,/,
-          ""
-        );
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
         const buffer = Buffer.from(base64Data, "base64");
 
         const optimizedBuffer = await sharp(buffer)
-          .resize(1920, 1080, { fit: "cover" })
+          .resize(1500, 500, { fit: "fill" })
           .jpeg({ quality: 85 })
           .toBuffer();
 
         const processedBase64 = `data:image/jpeg;base64,${optimizedBuffer.toString(
-          "base64"
+          "base64",
         )}`;
 
-        const uploaded = await uploadImage(
-          processedBase64,
-          "hero-slider"
-        );
+        const uploaded = await uploadImage(processedBase64, "hero-slider");
 
         processedImages.push(uploaded);
       }

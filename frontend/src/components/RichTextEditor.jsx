@@ -1,23 +1,29 @@
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
-import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function RichTextEditor({ value, onChange }) {
+  // ✅ FIX 1: Use a ref so the onUpdate closure always has the latest onChange
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
   const editor = useEditor({
     extensions: [
-      StarterKit, // includes strike + blockquote already
+      // ✅ FIX 2: StarterKit already has HorizontalRule — don't add it again
+      StarterKit,
       Underline,
       TextStyle,
       Color,
       Highlight,
-      HorizontalRule,
       Link.configure({
         openOnClick: true,
       }),
@@ -29,26 +35,28 @@ export default function RichTextEditor({ value, onChange }) {
     content: value || "",
 
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // ✅ FIX 1: Use ref — safe even if onChange was undefined initially
+      onChangeRef.current?.(editor.getHTML());
     },
 
     editorProps: {
       attributes: {
-        class: "p-4 min-h-[180px] focus:outline-none prose prose-sm max-w-none",
+        class:
+          "p-4 min-h-[180px] focus:outline-none prose prose-sm max-w-none",
       },
     },
   });
 
-  // Fix sync bug
+  // Sync external value into editor WITHOUT triggering onUpdate
   useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value || "");
+      // ✅ FIX 1: Pass `false` as 2nd arg to NOT emit the update event
+      editor.commands.setContent(value || "", false);
     }
   }, [value, editor]);
 
   if (!editor) return null;
 
-  // helpers
   const addLink = () => {
     const url = prompt("Enter URL");
     if (url) {
@@ -56,18 +64,22 @@ export default function RichTextEditor({ value, onChange }) {
     }
   };
 
+  // ✅ FIX 3: Replace <style jsx> with Tailwind classes
+  const btn =
+    "px-2.5 py-1.5 rounded-md bg-white text-sm cursor-pointer hover:bg-gray-200 transition-colors";
+  const active = "!bg-blue-500 !text-white";
+
   return (
     <div className="border border-gray-300 rounded-xl overflow-hidden bg-white shadow-sm">
       {/* TOOLBAR */}
       <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border-b">
-        {/* BASIC */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().toggleBold().run();
           }}
-          className={`btn ${editor.isActive("bold") && "active"}`}
+          className={`${btn} font-bold ${editor.isActive("bold") ? active : ""}`}
         >
           B
         </button>
@@ -77,7 +89,7 @@ export default function RichTextEditor({ value, onChange }) {
             e.preventDefault();
             editor.chain().focus().toggleItalic().run();
           }}
-          className={`btn ${editor.isActive("italic") && "active"}`}
+          className={`${btn} italic ${editor.isActive("italic") ? active : ""}`}
         >
           I
         </button>
@@ -87,7 +99,7 @@ export default function RichTextEditor({ value, onChange }) {
             e.preventDefault();
             editor.chain().focus().toggleUnderline().run();
           }}
-          className={`btn ${editor.isActive("underline") && "active"}`}
+          className={`${btn} underline ${editor.isActive("underline") ? active : ""}`}
         >
           U
         </button>
@@ -97,19 +109,18 @@ export default function RichTextEditor({ value, onChange }) {
             e.preventDefault();
             editor.chain().focus().toggleStrike().run();
           }}
-          className={`btn ${editor.isActive("strike") && "active"}`}
+          className={`${btn} line-through ${editor.isActive("strike") ? active : ""}`}
         >
           S
         </button>
 
-        {/* LIST */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().toggleBulletList().run();
           }}
-          className="btn"
+          className={btn}
         >
           • List
         </button>
@@ -119,70 +130,63 @@ export default function RichTextEditor({ value, onChange }) {
             e.preventDefault();
             editor.chain().focus().toggleOrderedList().run();
           }}
-          className="btn"
+          className={btn}
         >
           1. List
         </button>
 
-        {/* BLOCKQUOTE */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().toggleBlockquote().run();
           }}
-          className={`btn ${editor.isActive("blockquote") && "active"}`}
+          className={`${btn} ${editor.isActive("blockquote") ? active : ""}`}
         >
           ❝
         </button>
 
-        {/* HORIZONTAL LINE */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().setHorizontalRule().run();
           }}
-          className="btn"
+          className={btn}
         >
           ―
         </button>
 
-        {/* LINK */}
-        <button type="button" onClick={addLink} className="btn">
+        <button type="button" onClick={addLink} className={btn}>
           🔗
         </button>
 
-        {/* COLOR */}
         <input
           type="color"
-          onClick={(e) => {
-            e.preventDefault();
+          onChange={(e) => {
             editor.chain().focus().setColor(e.target.value).run();
           }}
           className="w-8 h-8 border rounded cursor-pointer"
         />
 
-        {/* HIGHLIGHT */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().toggleHighlight().run();
           }}
-          className="btn"
+          className={btn}
         >
           Highlight
         </button>
 
-        {/* CLEAR */}
         <button
           type="button"
           onClick={(e) => {
             e.preventDefault();
             editor.chain().focus().unsetAllMarks().run();
           }}
-          className="btn"
+          className={btn}
         >
           Clear
         </button>
@@ -191,23 +195,7 @@ export default function RichTextEditor({ value, onChange }) {
       {/* EDITOR */}
       <EditorContent editor={editor} />
 
-      {/* STYLES */}
-      <style jsx>{`
-        .btn {
-          padding: 6px 10px;
-          border-radius: 6px;
-          background: white;
-          font-size: 14px;
-          cursor: pointer;
-        }
-        .btn:hover {
-          background: #e5e7eb;
-        }
-        .active {
-          background: #3b82f6;
-          color: white;
-        }
-      `}</style>
+      {/* ✅ FIX 3: No more <style jsx> — all styles are Tailwind now */}
     </div>
   );
 }

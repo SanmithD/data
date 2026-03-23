@@ -37,16 +37,19 @@ export const useTimelineCardStore = create((set) => ({
 
   // ✅ Create TimelineCard
   createTimelineCard: async (data) => {
+    set({ loading: true })
     try {
       const res = await api.post("/insertTimeline", data);
       toast.success("Timeline created");
 
       set((state) => ({
         timelineCards: [...state.timelineCards, res.data],
+        loading: false
       }));
 
       return res.data;
     } catch (err) {
+      set({ loading: false })
       console.error(
         "Create timeline error:",
         err.response?.data || err.message,
@@ -58,6 +61,7 @@ export const useTimelineCardStore = create((set) => ({
 
   // ✅ Update TimelineCard
   updateTimelineCard: async (id, data) => {
+    set({ loading: true })
     try {
       const res = await api.put(`/updateTimeline/${id}`, data);
       toast.success("Timeline updated");
@@ -71,6 +75,7 @@ export const useTimelineCardStore = create((set) => ({
         timelineCards: state.timelineCards.map((t) =>
           t._id === id ? res.data : t,
         ),
+        loading: false
       }));
 
       return res.data;
@@ -79,6 +84,7 @@ export const useTimelineCardStore = create((set) => ({
         "Update timeline error:",
         err.response?.data || err.message,
       );
+      set({ loading: false })
       toast.error(err.response?.data?.error || "Update failed");
       throw err;
     }

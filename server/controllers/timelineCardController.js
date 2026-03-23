@@ -18,7 +18,7 @@ export const createTimelineCard = async (req, res) => {
       const buffer = Buffer.from(base64Data, "base64");
 
       const optimizedBuffer = await sharp(buffer)
-        .resize(1200, 800)
+        .resize(1500, 500)
         .jpeg({ quality: 85 })
         .toBuffer();
 
@@ -93,7 +93,7 @@ export const updateTimelineCard = async (req, res) => {
       const buffer = Buffer.from(base64Data, "base64");
 
       const optimizedBuffer = await sharp(buffer)
-        .resize(1200, 800)
+        .resize(1500, 500)
         .jpeg({ quality: 85 })
         .toBuffer();
 

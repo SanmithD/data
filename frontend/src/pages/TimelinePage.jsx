@@ -100,6 +100,7 @@ export default function TimelinePage() {
     updateTimelineCard,
     deleteTimelineCard,
     reorderTimeCards,
+    loading,
   } = useTimelineCardStore();
 
   const navigate = useNavigate();
@@ -325,7 +326,8 @@ export default function TimelinePage() {
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded"
                 >
-                  {editingCard ? "Update" : "Create"}
+                  {loading && "Loading..."}
+                  {!loading && (editingCard ? "Update" : "Create")}
                 </button>
               </div>
             </form>

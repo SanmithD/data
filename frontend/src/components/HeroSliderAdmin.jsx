@@ -101,14 +101,14 @@ export default function HeroSliderAdmin() {
           disabled={loading}
           className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg"
         >
-          <Save size={18} /> Save
+          <Save size={18} /> { loading ? 'Uploading': 'Save' }
         </button>
 
         <button
           onClick={handleDeleteAll}
           className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg"
         >
-          <Trash size={18} /> Delete All
+          <Trash size={18} /> { loading ? 'Deleting' : 'Delete All' }
         </button>
       </div>
 

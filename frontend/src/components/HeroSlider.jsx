@@ -17,7 +17,7 @@ export default function HeroSlider({ setShowModal }) {
   const hasImages = slider?.images && slider.images.length > 0;
 
   return (
-    <section className="relative w-full h-[30vh] md:h-[75vh] overflow-hidden text-white">
+    <section className="relative w-full h-[30vh] md:h-[70vh] overflow-hidden text-white">
       {/* ===== BACKGROUND SLIDER ===== */}
       {hasImages && (
         <div className="absolute inset-0 z-0">
@@ -36,7 +36,7 @@ export default function HeroSlider({ setShowModal }) {
             {slider.images.map((img, idx) => (
               <SwiperSlide key={idx}>
                 <div
-                  className="w-full h-full bg-cover bg-center"
+                  className="w-full h-full bg-contain bg-center bg-no-repeat bg-black"
                   style={{
                     backgroundImage: `url(${
                       typeof img === "string" ? img : img.url

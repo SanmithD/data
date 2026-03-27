@@ -113,7 +113,7 @@ export default function Home() {
       <HeroSlider />
 
       {/* --- TOOLBAR: SEARCH & LIMIT --- */}
-      <section className="max-w-7xl mx-auto px-3 sm:px-6 -mt-4 sm:-mt-10 relative z-20">
+      <section className="max-w-7xl mx-auto px-3 sm:px-6 relative z-20">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-2 sm:p-3 md:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
           {/* Search Input */}
           <div className="relative w-full">

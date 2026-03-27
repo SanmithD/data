@@ -211,14 +211,13 @@ export default function TimelinePage() {
   /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <button
-        className="px-3 py-1 bg-blue-500 text-white rounded-md"
-        onClick={() => navigate(-1)}
-      >
-        Back
-      </button>
-
       <div className="max-w-5xl mx-auto mb-8 flex justify-between items-center">
+        <button
+          className="px-3 py-1 bg-blue-500 text-white rounded-md"
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </button>
         <h1 className="text-3xl font-bold">Timeline Manager</h1>
 
         <button

@@ -34,6 +34,7 @@
     "swiper": "^12.1.2",
     "tailwindcss": "^4.2.1",
     "xlsx": "^0.18.5",
+    "yet-another-react-lightbox": "^3.30.1",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

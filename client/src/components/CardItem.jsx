@@ -7,12 +7,10 @@ export default function CardItem({ card, id }) {
   const navigate = useNavigate();
 
   // DnD setup
-  const {
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id, handle: true });
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    handle: true,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -25,6 +23,8 @@ export default function CardItem({ card, id }) {
     month: "short",
     day: "numeric",
   });
+
+  const plainText = card.description.replace(/<[^>]+>/g, "");
 
   return (
     <div
@@ -64,14 +64,20 @@ export default function CardItem({ card, id }) {
         </div>
 
         {/* Description */}
-        <p
-          className="text-gray-600 prose max-w-none text-sm mb-4 flex-grow line-clamp-3"
-          dangerouslySetInnerHTML={{ __html: card.description }}
-        />
+        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{plainText}</p>
+
+        {
+          card?.time_period && (
+            <p className="text-gray-600 text-sm mb-4 line-clamp-3">Period: {card?.time_period}</p>
+          )
+        }
 
         <div>
           {card?.timelineData?.[0]?.timeline && (
-            <span key={card?.timelineData?.[0]?.id} className="text-xs font-bold text-gray-600 whitespace-nowrap">
+            <span
+              key={card?.timelineData?.[0]?.id}
+              className="text-xs font-bold text-gray-600 whitespace-nowrap"
+            >
               Timeline {card?.timelineData?.[0]?.timeline}
             </span>
           )}

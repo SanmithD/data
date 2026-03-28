@@ -1,13 +1,15 @@
+import { Move, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTimelineCardStore } from "../store/timelineCardStore";
 import toast from "react-hot-toast";
-import { Plus, Pencil, Trash2, X, Move } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+import { useTimelineCardStore } from "../store/timelineCardStore";
 
 // DnD Kit
 import {
-  DndContext,
   closestCenter,
+  DndContext,
   PointerSensor,
   useSensor,
   useSensors,
@@ -15,8 +17,8 @@ import {
 import {
   arrayMove,
   SortableContext,
-  verticalListSortingStrategy,
   useSortable,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -24,6 +26,8 @@ import { CSS } from "@dnd-kit/utilities";
 function SortableItem({ card, openModal, handleDelete, movingId }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: card?._id || "" });
+
+  const [open, setOpen] = useState(false);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -57,7 +61,16 @@ function SortableItem({ card, openModal, handleDelete, movingId }) {
                 <img
                   src={card.timeline_image[0].image.url}
                   alt="image"
-                  className="w-16 h-16 object-cover rounded-lg"
+                  onClick={() => setOpen(true)}
+                  className="w-16 h-16 object-cover rounded-lg cursor-pointer 
+transition duration-300 
+hover:shadow-[0_0_20px_5px_rgba(99,102,241,0.7)]"
+                />
+
+                <Lightbox
+                  open={open}
+                  close={() => setOpen(false)}
+                  slides={[{ src: card.timeline_image[0].image.url }]}
                 />
               </div>
             )}

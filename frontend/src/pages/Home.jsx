@@ -12,12 +12,11 @@ import {
 } from "@dnd-kit/sortable";
 import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
+import HeroSlider from "../components/HeroSlider";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
-import HeroSlider from "../components/HeroSlider";
 import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
 
 export default function Home() {
@@ -44,7 +43,6 @@ export default function Home() {
   const { fetchTimelineDetail, timelineDetail, clearTimelineDetail } =
     useTimelineDetailStore();
 
-  const [showModal, setShowModal] = useState(false);
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [perPage, setPerPage] = useState(10);
@@ -72,19 +70,19 @@ export default function Home() {
       clearSearch();
       return;
     }
-    searchCards(
-      1,
-      perPage,
-      [
+    searchCards({
+      page: 1,
+      limit: perPage,
+      searchQuery: searchText.trim() || undefined,
+      searchDeatils: [
         {
           basicSearchKey: "title",
           basicSearchValue: searchText,
           basicSearchType: "regex-string",
         },
       ],
-      [],
-      { sortKey: "position", sortType: 1 },
-    );
+      sortDetails: { sortKey: "position", sortType: 1 },
+    });
     setSelectedTimeline(null); // deselect timeline
   };
 
@@ -145,62 +143,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* --- HERO SECTION --- */}
-      {/* <section className="relative bg-slate-900 text-white px-6 overflow-hidden">
-        <div className="absolute right-5 top-5 text-sm flex gap-2">
-          <a
-            href="https://marudhararts.com/contact"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <h1 className="text-sm cursor-pointer hover:text-red-300">
-              Contact
-            </h1>
-          </a>
-          <h1
-            className="text-sm cursor-pointer hover:text-red-300"
-            onClick={() => navigate("/about")}
-          >
-            About
-          </h1>
-        </div>
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
-
-        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 py-15">
-          <div className="flex flex-col items-center gap-6 mb-6">
-            <div className="p-2 rounded-2xl bg-white shadow-xl shadow-gray-200/40">
-              <img src="/download.png" className="h-20 w-20 object-contain" />
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-200">
-              My Diary
-            </h1>
-          </div>
-
-          <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Capture your thoughts, relive your moments, and preserve your
-            memories in a clean, beautiful timeline.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-md"
-            >
-              + Create Diary
-            </button>
-
-            <button
-              onClick={() => navigate("/timeline")}
-              className="px-6 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-all"
-            >
-              Add Timeline
-            </button>
-          </div>
-        </div>
-      </section> */}
-      <HeroSlider setShowModal={setShowModal} />
+      <HeroSlider />
 
       {/* --- TOOLBAR --- */}
       <section className="max-w-7xl mx-auto px-3 sm:px-6 relative z-20">
@@ -406,13 +349,6 @@ export default function Home() {
           </>
         )}
       </section>
-
-      {/* Modal */}
-      <AddCardModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        parentId={null}
-      />
     </div>
   );
 }

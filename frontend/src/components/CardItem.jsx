@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ExternalLink, Move, Trash } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCardStore } from "../store/cardStore";
 
@@ -24,11 +25,17 @@ export default function CardItem({ card, id }) {
     opacity: isDragging ? 0.8 : 1,
   };
 
+  useEffect(()=>{
+    console.log("Res", card)
+  },[])
+
   const formattedDate = new Date(card.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
+
+  const plainText = card.description.replace(/<[^>]+>/g, "");
 
   return (
     <div
@@ -78,11 +85,18 @@ export default function CardItem({ card, id }) {
         </div>
 
         {/* Description */}
-        <p
-          className="text-gray-600 prose max-w-none text-sm mb-4 flex-grow line-clamp-3"
-          dangerouslySetInnerHTML={{ __html: card.description }}
-        />
+        <p className="text-gray-600 text-sm mb-4 line-clamp-3">{plainText}</p>
 
+        <div>
+          {card?.time_period && (
+            <span
+              key={card?.time_period}
+              className="text-xs font-bold text-gray-600 whitespace-nowrap"
+            >
+              Period {card?.time_period}
+            </span>
+          )}
+        </div>
         <div>
           {card?.timelineData?.[0]?.timeline && (
             <span

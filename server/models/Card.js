@@ -49,7 +49,11 @@ const cardSchema = new mongoose.Schema(
     timelineId: {
       type: Number,
       default: 0
-    }
+    },
+    time_period: {
+      type: String,
+      default: 0
+    },
   },
   { timestamps: true }
 );

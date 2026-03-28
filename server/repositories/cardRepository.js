@@ -301,18 +301,34 @@ class CardRepository {
   }
 
   async searchCards({
-    searchDetails = [],
-    searchDetailsAnd = [],
+    searchQuery,
+    searchDetails,
+    searchDetailsAnd,
     sortDetails = { sortKey: "position", sortType: 1 },
     page = 1,
     limit = 10,
+    fromTime,
+    toTime,
   }) {
-    // Search is usually not cached due to high variability of params,
-    // but if you do, use a specific prefix like `cards:search:`
     const skip = (page - 1) * limit;
     const stageDocument = [];
     const stageCount = [];
 
+    // ── 1. Time range filter ─────────────────────────────────────────────────
+    if (fromTime && toTime) {
+      const stage = {
+        $match: {
+          time_period: {
+            $gte: Number(fromTime),
+            $lte: Number(toTime),
+          },
+        },
+      };
+      stageDocument.push(stage);
+      stageCount.push(stage);
+    }
+
+    // ── 2. Add fields for regex-number search ────────────────────────────────
     const numberStages = mongodbAddFieldsForRegexNumberSearch({
       searchDetails,
     });
@@ -321,13 +337,43 @@ class CardRepository {
       stageCount.push(s);
     });
 
+    // ── 3. parentCard / root filter (MUST come before text search) ───────────
+    // ObjectId fields that must never be matched as plain strings
+    const OBJECT_ID_FIELDS = ["parentCard", "_id", "userId"];
+
+    const primarySearch = Array.isArray(searchDetails)
+      ? searchDetails[0]
+      : searchDetails;
+
+    if (primarySearch?.basicSearchKey === "parentCard") {
+      const stage = {
+        $match: {
+          $expr: {
+            $eq: [
+              "$parentCard",
+              { $toObjectId: primarySearch.basicSearchValue },
+            ],
+          },
+        },
+      };
+      stageDocument.push(stage);
+      stageCount.push(stage);
+    } else {
+      const rootMatch = { $match: { parentCard: null } };
+      stageDocument.push(rootMatch);
+      stageCount.push(rootMatch);
+    }
+
+    // ── 4. searchDetails — OR conditions (skip ObjectId fields) ─────────────
     if (searchDetails?.length) {
       const orConditions = searchDetails
         .map((el) => {
-          if (
-            el.basicSearchType === "number" ||
-            el.basicSearchType === "string"
-          )
+          // ObjectId fields are already handled above — skip them here
+          if (OBJECT_ID_FIELDS.includes(el.basicSearchKey)) return null;
+
+          if (el.basicSearchType === "number")
+            return { [el.basicSearchKey]: Number(el.basicSearchValue) };
+          if (el.basicSearchType === "string")
             return { [el.basicSearchKey]: el.basicSearchValue };
           if (el.basicSearchType === "regex-string")
             return {
@@ -339,6 +385,7 @@ class CardRepository {
                 $regex: new RegExp(`${el.basicSearchValue}`, "i"),
               },
             };
+          return null;
         })
         .filter(Boolean);
 
@@ -349,13 +396,15 @@ class CardRepository {
       }
     }
 
+    // ── 5. searchDetailsAnd — AND conditions (skip ObjectId fields) ──────────
     if (searchDetailsAnd?.length) {
       const andConditions = searchDetailsAnd
         .map((el) => {
-          if (
-            el.basicSearchType === "number" ||
-            el.basicSearchType === "string"
-          )
+          if (OBJECT_ID_FIELDS.includes(el.basicSearchKey)) return null;
+
+          if (el.basicSearchType === "number")
+            return { [el.basicSearchKey]: Number(el.basicSearchValue) };
+          if (el.basicSearchType === "string")
             return { [el.basicSearchKey]: el.basicSearchValue };
           if (el.basicSearchType === "regex-string")
             return {
@@ -367,6 +416,7 @@ class CardRepository {
                 $regex: new RegExp(`${el.basicSearchValue}`, "i"),
               },
             };
+          return null;
         })
         .filter(Boolean);
 
@@ -377,10 +427,32 @@ class CardRepository {
       }
     }
 
-    const rootMatch = { $match: { parentCard: null } };
-    stageDocument.push(rootMatch);
-    stageCount.push(rootMatch);
+    // ── 6. Free-text searchQuery across title / category / description ────────
+    if (typeof searchQuery === "string" && searchQuery.trim() !== "") {
+      const matchOrArr = [];
+      const stringFields = ["title", "category", "description"];
+      const numberFields = ["id", "position", "time_period", "timelineId"];
 
+      stringFields.forEach((field) => {
+        matchOrArr.push({
+          [field]: { $regex: searchQuery.trim(), $options: "i" },
+        });
+      });
+
+      if (!isNaN(Number(searchQuery)) && searchQuery.trim() !== "") {
+        numberFields.forEach((field) => {
+          matchOrArr.push({ [field]: Number(searchQuery) });
+        });
+      }
+
+      if (matchOrArr.length > 0) {
+        const matchStage = { $match: { $or: matchOrArr } };
+        stageDocument.push(matchStage);
+        stageCount.push(matchStage);
+      }
+    }
+
+    // ── 7. Sort / paginate / lookup ──────────────────────────────────────────
     stageDocument.push({
       $sort: { [sortDetails.sortKey]: sortDetails.sortType },
     });
@@ -399,6 +471,7 @@ class CardRepository {
 
     stageCount.push({ $count: "count" });
 
+    // ── 8. Execute ───────────────────────────────────────────────────────────
     const [docs, countResult] = await Promise.all([
       Card.aggregate(stageDocument),
       Card.aggregate(stageCount),

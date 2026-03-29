@@ -4,6 +4,29 @@ import Card from "../models/Card.js";
 import { AppError } from "../utils/AppError.js";
 import mongodbAddFieldsForRegexNumberSearch from "../utils/mongodbAddFieldsForRegexNumberSearch.util.js";
 
+function timePeriodToNumber(str) {
+  if (!str) return null;
+  if (str === null || str === undefined) return null;
+  if (typeof str === "number") return str; // already numeric
+  if (typeof str !== "string") return null; // unexpected type, bail
+
+  const s = str.trim().toUpperCase().replace(/\s+/g, " ");
+
+  // Match number + optional era label
+  const match = s.match(/^(-?\d+(?:\.\d+)?)\s*(BCE|BC|CE|AD)?$/);
+  if (!match) return null;
+
+  let num = parseFloat(match[1]);
+  const era = match[2];
+
+  if (era === "BCE" || era === "BC") {
+    num = -Math.abs(num); // force negative
+  }
+  // CE, AD, or no label → positive (already is)
+
+  return num;
+}
+
 class CardRepository {
   // Helper to clear list-related caches when data changes
   async #clearListCaches() {
@@ -17,7 +40,11 @@ class CardRepository {
 
   async createCard(data) {
     const redis = getRedis();
-    const card = await Card.create(data);
+    const timePeriodNum = timePeriodToNumber(data.time_period);
+    const card = await Card.create({
+      ...data,
+      time_period_num: timePeriodNum,
+    });
 
     // Clear all list caches because a new card affects pagination/order
     await this.#clearListCaches();
@@ -314,16 +341,19 @@ class CardRepository {
     const stageDocument = [];
     const stageCount = [];
 
-    // ── 1. Time range filter ─────────────────────────────────────────────────
     if (fromTime && toTime) {
+      const fromNum = timePeriodToNumber(String(fromTime)); // force string
+      const toNum = timePeriodToNumber(String(toTime));
+
       const stage = {
         $match: {
-          time_period: {
-            $gte: Number(fromTime),
-            $lte: Number(toTime),
+          time_period_num: {
+            $gte: fromNum,
+            $lte: toNum,
           },
         },
       };
+
       stageDocument.push(stage);
       stageCount.push(stage);
     }
@@ -430,8 +460,8 @@ class CardRepository {
     // ── 6. Free-text searchQuery across title / category / description ────────
     if (typeof searchQuery === "string" && searchQuery.trim() !== "") {
       const matchOrArr = [];
-      const stringFields = ["title", "category", "description"];
-      const numberFields = ["id", "position", "time_period", "timelineId"];
+      const stringFields = ["title", "category", "description", "time_period"];
+      const numberFields = ["id", "position", "time_period_num", "timelineId"];
 
       stringFields.forEach((field) => {
         matchOrArr.push({

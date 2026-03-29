@@ -4,7 +4,8 @@ const cardSchema = new mongoose.Schema(
   {
     id: {
       type: Number,
-      unique: true
+      unique: true,
+      index: true
     },
 
     title: {
@@ -31,7 +32,8 @@ const cardSchema = new mongoose.Schema(
     parentCard: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Card",
-      default: null
+      default: null,
+      index: true
     },
 
     subCards: [
@@ -52,6 +54,10 @@ const cardSchema = new mongoose.Schema(
     },
     time_period: {
       type: String,
+      default: ''
+    },
+    time_period_num: {
+      type: Number,
       default: 0
     },
   },

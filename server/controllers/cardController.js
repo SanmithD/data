@@ -164,7 +164,6 @@ export const searchCards = async (req, res) => {
       toTime
     } = req.body;
 
-    console.log('Search Details', JSON.stringify(searchDetails))
     const result = await cardRepository.searchCards({
       searchDetails,
       searchDetailsAnd,

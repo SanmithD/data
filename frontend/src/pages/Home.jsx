@@ -12,6 +12,8 @@ import {
 } from "@dnd-kit/sortable";
 import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 import CardItem from "../components/CardItem";
 import HeroSlider from "../components/HeroSlider";
 import { useCardStore } from "../store/cardStore";
@@ -46,6 +48,7 @@ export default function Home() {
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [perPage, setPerPage] = useState(10);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -281,7 +284,14 @@ export default function Home() {
             <img
               src={timelineDetail.image.url}
               alt="timeline"
-              className="w-full max-h-[400px] object-cover rounded-xl"
+              onClick={() => setLightboxOpen(true)}
+              className="w-full max-h-100 object-cover rounded-xl cursor-pointer"
+            />
+
+            <Lightbox
+              open={lightboxOpen}
+              close={() => setLightboxOpen(false)}
+              slides={[{ src: timelineDetail.image.url }]}
             />
 
             {timelineDetail.note && (
@@ -294,7 +304,7 @@ export default function Home() {
       ) : null}
 
       {/* --- CARDS --- */}
-      <section className="py-8 px-6 max-w-7xl mx-auto min-h-[400px]">
+      <section className="py-8 px-6 max-w-7xl mx-auto min-h-100">
         {activeLoading && activeCards.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
@@ -340,7 +350,8 @@ export default function Home() {
                 <button
                   onClick={handleLoadMore}
                   disabled={activeLoading}
-                  className="px-8 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                  title="Load More"
+                  className="px-8 py-3 bg-white border cursor-pointer border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
                 >
                   {activeLoading ? "Loading..." : "Load More"}
                 </button>

@@ -38,29 +38,6 @@ const inputCls =
   "placeholder:text-gray-400 outline-none transition-all " +
   "focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10";
 
-function  parseTimePeriod(value) {
-  if (!value) return null;
-
-  const clean = value.trim().toUpperCase();
-
-  const match = clean.match(/(\d+)/);
-  if (!match) return null;
-
-  let year = Number(match[1]);
-
-  // detect era
-  if (clean.includes("BCE") || clean.includes("BC")) {
-    return -year;
-  }
-
-  if (clean.includes("CE") || clean.includes("AD")) {
-    return year;
-  }
-
-  // if no era mentioned → assume CE (you can change this)
-  return year;
-}
-
 export default function CardDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -156,8 +133,7 @@ export default function CardDetails() {
   // Only includes fromTime/toTime when BOTH are filled
   const buildSearchPayload = ({ page: pg = 1, limit = perPage } = {}) => {
     const hasTimeRange = startTime.trim() !== "" && endTime.trim() !== "";
-    const startTimePeriod = parseTimePeriod(startTime)
-    const endTimePeriod = parseTimePeriod(endTime)
+    
     return {
       searchQuery: searchText.trim() || undefined,
       page: pg,
@@ -170,8 +146,8 @@ export default function CardDetails() {
         },
       ],
       ...(hasTimeRange && {
-        fromTime: Number(startTimePeriod),
-        toTime: Number(endTimePeriod),
+        fromTime: startTime,
+        toTime: endTime,
       }),
     };
   };
@@ -417,7 +393,7 @@ export default function CardDetails() {
                   onDrop={handleImageDrop}
                   onClick={() => fileInputRef.current?.click()}
                   className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center
-                    justify-center cursor-pointer transition-colors min-h-[200px]
+                    justify-center cursor-pointer transition-colors min-h-50
                     ${isDraggingImage ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:bg-gray-100"}`}
                 >
                   <input

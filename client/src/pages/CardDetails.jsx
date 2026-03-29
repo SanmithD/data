@@ -3,9 +3,10 @@ import {
   ArrowLeft,
   ChevronDown,
   ExternalLink,
+  Home,
   Loader2,
   RotateCcw,
-  Search
+  Search,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -22,29 +23,6 @@ const inputCls =
   "w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl " +
   "placeholder:text-gray-400 outline-none transition-all " +
   "focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10";
-
-function parseTimePeriod(value) {
-  if (!value) return null;
-
-  const clean = value.trim().toUpperCase();
-
-  const match = clean.match(/(\d+)/);
-  if (!match) return null;
-
-  let year = Number(match[1]);
-
-  // detect era
-  if (clean.includes("BCE") || clean.includes("BC")) {
-    return -year;
-  }
-
-  if (clean.includes("CE") || clean.includes("AD")) {
-    return year;
-  }
-
-  // if no era mentioned → assume CE (you can change this)
-  return year;
-}
 
 export default function CardDetails() {
   const { id } = useParams();
@@ -79,10 +57,7 @@ export default function CardDetails() {
 
   const { timelineCards, fetchTimelineCards } = useTimelineCardStore();
 
-  const {
-    pageTitles,
-    fetchPageTitles,
-  } = usePageTitleStore();
+  const { pageTitles, fetchPageTitles } = usePageTitleStore();
 
   const [childPage, setChildPage] = useState(1);
 
@@ -108,8 +83,7 @@ export default function CardDetails() {
   // Only includes fromTime/toTime when BOTH are filled
   const buildSearchPayload = ({ page: pg = 1, limit = perPage } = {}) => {
     const hasTimeRange = startTime.trim() !== "" && endTime.trim() !== "";
-    const startTimePeriod = parseTimePeriod(startTime);
-    const endTimePeriod = parseTimePeriod(endTime);
+
     return {
       searchQuery: searchText.trim() || undefined,
       page: pg,
@@ -122,8 +96,8 @@ export default function CardDetails() {
         },
       ],
       ...(hasTimeRange && {
-        fromTime: Number(startTimePeriod),
-        toTime: Number(endTimePeriod),
+        fromTime: startTime,
+        toTime: endTime,
       }),
     };
   };
@@ -185,13 +159,23 @@ export default function CardDetails() {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {/* Back */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-6"
-      >
-        <ArrowLeft size={20} /> Back
-      </button>
+      <div className="flex gap-2 items-center justify-between" >
+        {/* Back */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-6"
+        >
+          <ArrowLeft size={20} /> Back
+        </button>
+
+        {/* Home */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-blue-600 transition-colors mb-6"
+        >
+          <Home size={20} /> Home
+        </button>
+      </div>
 
       {/* ── Card Details ── */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-10 relative">

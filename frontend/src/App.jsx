@@ -1,10 +1,11 @@
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import HeroSliderAdmin from "./components/HeroSliderAdmin";
+import AboutPage from "./pages/About";
+import AddCardPage from "./pages/AddCardModal";
 import CardDetails from "./pages/CardDetails";
 import Home from "./pages/Home";
 import TimelinePage from "./pages/TimelinePage";
-import AboutPage from "./pages/About";
-import HeroSliderAdmin from "./components/HeroSliderAdmin";
 
 export default function App() {
 
@@ -21,6 +22,8 @@ export default function App() {
         <Route path="/timeline" element={<TimelinePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/slide-images" element={<HeroSliderAdmin />} />
+        <Route path="/addCard" element={<AddCardPage />} />
+        <Route path="/addCard/:parentId" element={<AddCardPage />} />
       </Routes>
 
     </BrowserRouter>

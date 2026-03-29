@@ -15,22 +15,30 @@ export const useCardSearchStore = create((set) => ({
    * searchDetailsAnd = [{ basicSearchKey, basicSearchValue, basicSearchType }]
    * sortDetails = { sortKey: 'position', sortType: 1 }
    */
-  searchCards: async (
+  searchCards: async ({
     page = 1,
     limit = 10,
-    searchDetails = [],
-    searchDetailsAnd = [],
+    searchQuery,
+    searchDetails,
+    searchDetailsAnd,
     sortDetails = { sortKey: "position", sortType: 1 },
     append = false,
-  ) => {
+    fromTime,
+    toTime,
+  }) => {
     set({ loading: true });
 
     try {
       const payload = {
+        searchQuery,
         searchDetails,
         searchDetailsAnd,
         sortDetails,
+        fromTime,
+        toTime,
       };
+
+      console.log("Payload", payload);
 
       const res = await api.post(
         `/search?page=${page}&limit=${limit}`,

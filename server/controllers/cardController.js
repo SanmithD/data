@@ -157,16 +157,22 @@ export const searchCards = async (req, res) => {
       searchDetails,
       searchDetailsAnd,
       sortDetails,
+      searchQuery,
       page = 1,
       limit = 10,
+      fromTime,
+      toTime
     } = req.body;
 
     const result = await cardRepository.searchCards({
       searchDetails,
       searchDetailsAnd,
       sortDetails,
+      searchQuery,
       page,
       limit,
+      fromTime,
+      toTime
     });
 
     res.status(200).json(result);

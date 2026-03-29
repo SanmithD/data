@@ -4,6 +4,29 @@ import Card from "../models/Card.js";
 import { AppError } from "../utils/AppError.js";
 import mongodbAddFieldsForRegexNumberSearch from "../utils/mongodbAddFieldsForRegexNumberSearch.util.js";
 
+function timePeriodToNumber(str) {
+  if (!str) return null;
+  if (str === null || str === undefined) return null;
+  if (typeof str === "number") return str; // already numeric
+  if (typeof str !== "string") return null; // unexpected type, bail
+
+  const s = str.trim().toUpperCase().replace(/\s+/g, " ");
+
+  // Match number + optional era label
+  const match = s.match(/^(-?\d+(?:\.\d+)?)\s*(BCE|BC|CE|AD)?$/);
+  if (!match) return null;
+
+  let num = parseFloat(match[1]);
+  const era = match[2];
+
+  if (era === "BCE" || era === "BC") {
+    num = -Math.abs(num); // force negative
+  }
+  // CE, AD, or no label → positive (already is)
+
+  return num;
+}
+
 class CardRepository {
   // Helper to clear list-related caches when data changes
   async #clearListCaches() {
@@ -17,7 +40,11 @@ class CardRepository {
 
   async createCard(data) {
     const redis = getRedis();
-    const card = await Card.create(data);
+    const timePeriodNum = timePeriodToNumber(data.time_period);
+    const card = await Card.create({
+      ...data,
+      time_period_num: timePeriodNum,
+    });
 
     // Clear all list caches because a new card affects pagination/order
     await this.#clearListCaches();
@@ -301,18 +328,37 @@ class CardRepository {
   }
 
   async searchCards({
-    searchDetails = [],
-    searchDetailsAnd = [],
+    searchQuery,
+    searchDetails,
+    searchDetailsAnd,
     sortDetails = { sortKey: "position", sortType: 1 },
     page = 1,
     limit = 10,
+    fromTime,
+    toTime,
   }) {
-    // Search is usually not cached due to high variability of params,
-    // but if you do, use a specific prefix like `cards:search:`
     const skip = (page - 1) * limit;
     const stageDocument = [];
     const stageCount = [];
 
+    if (fromTime && toTime) {
+      const fromNum = timePeriodToNumber(String(fromTime)); // force string
+      const toNum = timePeriodToNumber(String(toTime));
+
+      const stage = {
+        $match: {
+          time_period_num: {
+            $gte: fromNum,
+            $lte: toNum,
+          },
+        },
+      };
+
+      stageDocument.push(stage);
+      stageCount.push(stage);
+    }
+
+    // ── 2. Add fields for regex-number search ────────────────────────────────
     const numberStages = mongodbAddFieldsForRegexNumberSearch({
       searchDetails,
     });
@@ -321,13 +367,43 @@ class CardRepository {
       stageCount.push(s);
     });
 
+    // ── 3. parentCard / root filter (MUST come before text search) ───────────
+    // ObjectId fields that must never be matched as plain strings
+    const OBJECT_ID_FIELDS = ["parentCard", "_id", "userId"];
+
+    const primarySearch = Array.isArray(searchDetails)
+      ? searchDetails[0]
+      : searchDetails;
+
+    if (primarySearch?.basicSearchKey === "parentCard") {
+      const stage = {
+        $match: {
+          $expr: {
+            $eq: [
+              "$parentCard",
+              { $toObjectId: primarySearch.basicSearchValue },
+            ],
+          },
+        },
+      };
+      stageDocument.push(stage);
+      stageCount.push(stage);
+    } else {
+      const rootMatch = { $match: { parentCard: null } };
+      stageDocument.push(rootMatch);
+      stageCount.push(rootMatch);
+    }
+
+    // ── 4. searchDetails — OR conditions (skip ObjectId fields) ─────────────
     if (searchDetails?.length) {
       const orConditions = searchDetails
         .map((el) => {
-          if (
-            el.basicSearchType === "number" ||
-            el.basicSearchType === "string"
-          )
+          // ObjectId fields are already handled above — skip them here
+          if (OBJECT_ID_FIELDS.includes(el.basicSearchKey)) return null;
+
+          if (el.basicSearchType === "number")
+            return { [el.basicSearchKey]: Number(el.basicSearchValue) };
+          if (el.basicSearchType === "string")
             return { [el.basicSearchKey]: el.basicSearchValue };
           if (el.basicSearchType === "regex-string")
             return {
@@ -339,6 +415,7 @@ class CardRepository {
                 $regex: new RegExp(`${el.basicSearchValue}`, "i"),
               },
             };
+          return null;
         })
         .filter(Boolean);
 
@@ -349,13 +426,15 @@ class CardRepository {
       }
     }
 
+    // ── 5. searchDetailsAnd — AND conditions (skip ObjectId fields) ──────────
     if (searchDetailsAnd?.length) {
       const andConditions = searchDetailsAnd
         .map((el) => {
-          if (
-            el.basicSearchType === "number" ||
-            el.basicSearchType === "string"
-          )
+          if (OBJECT_ID_FIELDS.includes(el.basicSearchKey)) return null;
+
+          if (el.basicSearchType === "number")
+            return { [el.basicSearchKey]: Number(el.basicSearchValue) };
+          if (el.basicSearchType === "string")
             return { [el.basicSearchKey]: el.basicSearchValue };
           if (el.basicSearchType === "regex-string")
             return {
@@ -367,6 +446,7 @@ class CardRepository {
                 $regex: new RegExp(`${el.basicSearchValue}`, "i"),
               },
             };
+          return null;
         })
         .filter(Boolean);
 
@@ -377,10 +457,32 @@ class CardRepository {
       }
     }
 
-    const rootMatch = { $match: { parentCard: null } };
-    stageDocument.push(rootMatch);
-    stageCount.push(rootMatch);
+    // ── 6. Free-text searchQuery across title / category / description ────────
+    if (typeof searchQuery === "string" && searchQuery.trim() !== "") {
+      const matchOrArr = [];
+      const stringFields = ["title", "category", "description", "time_period"];
+      const numberFields = ["id", "position", "time_period_num", "timelineId"];
 
+      stringFields.forEach((field) => {
+        matchOrArr.push({
+          [field]: { $regex: searchQuery.trim(), $options: "i" },
+        });
+      });
+
+      if (!isNaN(Number(searchQuery)) && searchQuery.trim() !== "") {
+        numberFields.forEach((field) => {
+          matchOrArr.push({ [field]: Number(searchQuery) });
+        });
+      }
+
+      if (matchOrArr.length > 0) {
+        const matchStage = { $match: { $or: matchOrArr } };
+        stageDocument.push(matchStage);
+        stageCount.push(matchStage);
+      }
+    }
+
+    // ── 7. Sort / paginate / lookup ──────────────────────────────────────────
     stageDocument.push({
       $sort: { [sortDetails.sortKey]: sortDetails.sortType },
     });
@@ -399,6 +501,7 @@ class CardRepository {
 
     stageCount.push({ $count: "count" });
 
+    // ── 8. Execute ───────────────────────────────────────────────────────────
     const [docs, countResult] = await Promise.all([
       Card.aggregate(stageDocument),
       Card.aggregate(stageCount),

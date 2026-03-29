@@ -1,11 +1,13 @@
 import { ChevronDown, RotateCcw, Search } from "lucide-react"; // Assuming lucide-react is used, or replace with SVGs
 import { useEffect, useState } from "react";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
 import AddCardModal from "../components/AddCardModal";
 import CardItem from "../components/CardItem";
+import HeroSlider from "../components/HeroSlider";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
-import HeroSlider from "../components/HeroSlider";
 import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
 
 export default function Home() {
@@ -35,6 +37,7 @@ export default function Home() {
   const [selectedTimeline, setSelectedTimeline] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [perPage, setPerPage] = useState(10);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useEffect(() => {
     fetchCards(1, perPage, false);
@@ -259,7 +262,14 @@ export default function Home() {
             <img
               src={timelineDetail.image.url}
               alt="timeline"
-              className="w-full max-h-[400px] object-cover rounded-xl"
+              onClick={() => setLightboxOpen(true)}
+              className="w-full max-h-100 object-cover rounded-xl"
+            />
+
+            <Lightbox
+              open={lightboxOpen}
+              close={() => setLightboxOpen(false)}
+              slides={[{ src: timelineDetail.image.url }]}
             />
 
             {timelineDetail.note && (

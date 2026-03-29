@@ -1,13 +1,12 @@
-import { useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade } from "swiper/modules";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "swiper/css";
 import "swiper/css/effect-fade";
-import { useNavigate } from "react-router-dom";
+import { Autoplay, EffectFade } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { useHeroSliderStore } from "../store/useHeroSliderStore";
-import { useState } from "react";
 
-export default function HeroSlider({ setShowModal }) {
+export default function HeroSlider() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const { slider, loading, fetchSlider } = useHeroSliderStore();
@@ -106,9 +105,13 @@ export default function HeroSlider({ setShowModal }) {
             </button>
 
             <button
+              // onClick={() => {
+              //   setShowModal(true);
+              //   setMenuOpen(false);
+              // }}
               onClick={() => {
-                setShowModal(true);
-                setMenuOpen(false);
+                navigate("/addCard");
+                setMenuOpen(false)
               }}
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300

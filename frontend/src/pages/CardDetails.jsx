@@ -54,6 +54,8 @@ export default function CardDetails() {
     url: "",
     image: "",
     timelineId: 0,
+    start_time: "",
+    end_time: "",
   });
 
   // ── Search state ─────────────────────────────────────────────────────────
@@ -120,6 +122,8 @@ export default function CardDetails() {
         url: cardDetails.url || "",
         image: cardDetails.image || "",
         timelineId: cardDetails.timelineId || 0,
+        start_time: cardDetails.start_time || 0,
+        end_time: cardDetails.end_time || 0,
       });
     }
   }, [cardDetails, isEditing]);
@@ -235,6 +239,8 @@ export default function CardDetails() {
       Category: card.category,
       URL: card.url,
       Timeline: card.timelineId || "",
+      StartTime: card.start_time || "",
+      EndTime: card.end_time || "",
       CreatedAt: new Date(card.createdAt).toLocaleDateString(),
     }));
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -356,6 +362,19 @@ export default function CardDetails() {
                 </p>
               )}
 
+              {cardDetails.start_time && (
+                <p className="text-gray-500 mb-2">
+                  From:{" "}
+                  <span className="font-medium text-gray-700">
+                    {cardDetails.start_time} 
+                  </span>
+                  To:{" "}
+                  <span className="font-medium text-gray-700">
+                    {cardDetails.end_time ?? ''}
+                  </span>
+                </p>
+              )}
+
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 border-t pt-6 mt-4">
                 <p>
                   Created on:{" "}
@@ -455,6 +474,20 @@ export default function CardDetails() {
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
                   <input
                     type="text" name="category" value={editFormData.category}
+                    onChange={handleFormChange} className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Start Time</label>
+                  <input
+                    type="text" name="start_time" value={editFormData.start_time}
+                    onChange={handleFormChange} className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">End Time</label>
+                  <input
+                    type="text" name="end_time" value={editFormData.end_time}
                     onChange={handleFormChange} className={inputCls}
                   />
                 </div>

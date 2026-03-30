@@ -133,15 +133,15 @@ export default function CardItem({ card, id }) {
         </p>
 
         {/* Meta Tags Row */}
-        {(card?.time_period || card?.timelineData?.[0]?.timeline) && (
+        {(card?.start_time || card?.timelineData?.[0]?.timeline) && (
           <div className="flex flex-wrap gap-2 pt-1">
-            {card?.time_period && (
+            {card?.start_time && (
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                 bg-gray-50 border border-gray-100 text-[11px] font-medium text-gray-500"
               >
                 <Clock size={10} strokeWidth={2.5} className="text-gray-400" />
-                Period {card.time_period}
+                From {card.start_time} to {card.end_time || "?"}
               </span>
             )}
             {card?.timelineData?.[0]?.timeline && (

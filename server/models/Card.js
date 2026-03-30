@@ -52,11 +52,19 @@ const cardSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
-    time_period: {
+    start_time: {
       type: String,
       default: ''
     },
-    time_period_num: {
+    start_time_num: {
+      type: Number,
+      default: 0
+    },
+    end_time: {
+      type: String,
+      default: ''
+    },
+    end_time_num: {
       type: Number,
       default: 0
     },

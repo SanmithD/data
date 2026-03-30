@@ -49,7 +49,8 @@ export default function AddCardPage() {
     image: "",
     category: "",
     timelineId: 0,
-    time_period: "",
+    start_time: "",
+    end_time: "",
   });
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -203,11 +204,23 @@ export default function AddCardPage() {
                 <div>
                   <FieldLabel>
                     <Tag size={13} className="text-gray-400" />
-                    Time Period
+                    Start Time Period
                   </FieldLabel>
                   <InputBase
-                    name="time_period"
-                    value={formData.time_period}
+                    name="start_time"
+                    value={formData.start_time}
+                    onChange={handleChange}
+                    placeholder="e.g. 1947"
+                  />
+                </div>
+                <div>
+                  <FieldLabel>
+                    <Tag size={13} className="text-gray-400" />
+                    End Time Period
+                  </FieldLabel>
+                  <InputBase
+                    name="end_time"
+                    value={formData.end_time}
                     onChange={handleChange}
                     placeholder="e.g. 1947"
                   />

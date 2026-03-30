@@ -40,10 +40,12 @@ class CardRepository {
 
   async createCard(data) {
     const redis = getRedis();
-    const timePeriodNum = timePeriodToNumber(data.time_period);
+    const startTime = timePeriodToNumber(data.start_time);
+    const endTime = timePeriodToNumber(data.end_time);
     const card = await Card.create({
       ...data,
-      time_period_num: timePeriodNum,
+      start_time_num: startTime,
+      end_time_num: endTime,
     });
 
     // Clear all list caches because a new card affects pagination/order
@@ -347,8 +349,10 @@ class CardRepository {
 
       const stage = {
         $match: {
-          time_period_num: {
+          start_time_num: {
             $gte: fromNum,
+          },
+          end_time_num: {
             $lte: toNum,
           },
         },

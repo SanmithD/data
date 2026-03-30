@@ -159,7 +159,7 @@ export default function CardDetails() {
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex gap-2 items-center justify-between" >
+      <div className="flex gap-2 items-center justify-between">
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
@@ -219,6 +219,19 @@ export default function CardDetails() {
                 <span className="font-medium text-gray-700">
                   {timelineCards.find((t) => t.id === cardDetails.timelineId)
                     ?.timeline || "N/A"}
+                </span>
+              </p>
+            )}
+
+            {cardDetails.start_time && (
+              <p className="text-gray-500 mb-2">
+                From:{" "}
+                <span className="font-medium text-gray-700">
+                  {cardDetails.start_time}
+                </span>
+                To:{" "}
+                <span className="font-medium text-gray-700">
+                  {cardDetails.end_time ?? ""}
                 </span>
               </p>
             )}

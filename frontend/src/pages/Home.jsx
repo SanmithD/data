@@ -20,6 +20,7 @@ import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
 import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const {
@@ -49,6 +50,8 @@ export default function Home() {
   const [searchText, setSearchText] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -148,6 +151,111 @@ export default function Home() {
       {/* --- HERO SECTION --- */}
       <HeroSlider />
 
+      {/* ===== TOP NAV ===== */}
+      <div className="absolute right-5 top-5 z-999">
+        {/* Hamburger Button */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="relative flex flex-col justify-center items-center w-7 h-6 md:w-10 md:h-10 
+    backdrop-blur-md bg-black/40 rounded-full
+    hover:bg-black/60 transition duration-300"
+        >
+          {/* Lines */}
+          <span
+            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+              menuOpen ? "rotate-45" : "-translate-y-1.5"
+            }`}
+          />
+          <span
+            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+              menuOpen ? "opacity-0" : ""
+            }`}
+          />
+          <span
+            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+              menuOpen ? "-rotate-45" : "translate-y-1.5"
+            }`}
+          />
+        </button>
+
+        {/* Dropdown Menu */}
+        <div
+          className={`absolute right-0 mt-3 w-40 md:w-52 z-999 origin-top-right transform transition-all duration-300 ${
+            menuOpen
+              ? "opacity-100 scale-100 translate-y-0"
+              : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
+          }`}
+        >
+          <div
+            className="flex flex-col gap-0.5 md:gap-2 p-1 md:p-4 rounded-2xl
+      bg-black/70 backdrop-blur-xl justify-center border border-white/10 shadow-2xl"
+          >
+            <button
+              onClick={() => {
+                navigate("/slide-images");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+            >
+              Slide Images
+            </button>
+
+            <button
+              // onClick={() => {
+              //   setShowModal(true);
+              //   setMenuOpen(false);
+              // }}
+              onClick={() => {
+                navigate("/addCard");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+            >
+              + Create Diary
+            </button>
+
+            <button
+              onClick={() => {
+                navigate("/timeline");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+            >
+              Timeline
+            </button>
+
+            <a
+              href="https://marudhararts.com/contact"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+            >
+              Contact
+            </a>
+
+            <button
+              onClick={() => {
+                navigate("/about");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+            >
+              About
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* --- TOOLBAR --- */}
       <section className="max-w-7xl mx-auto px-3 sm:px-6 relative z-20">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl border border-gray-100 p-2 sm:p-3 md:p-5 flex flex-col sm:flex-row gap-2 sm:gap-3 md:gap-4">
@@ -223,7 +331,7 @@ export default function Home() {
             >
               <RotateCcw
                 size={14}
-                className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]"
+                className="sm:w-4 sm:h-4 md:w-4.5 md:h-4.5"
               />
             </button>
           </div>
@@ -231,14 +339,26 @@ export default function Home() {
       </section>
 
       {/* --- TIMELINE --- */}
-      <section className="py-3 md:py-12 px-6 max-w-7xl mx-auto">
+      <section className="py-8 md:py-12 px-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-bold text-gray-800">Timeline Filter</h2>
+          <button
+            onClick={() => {
+              fetchCards(1, 10, false);
+              setSelectedTimeline(null);
+              clearTimelineDetail();
+              clearSearch();
+              setSearchText("");
+            }}
+            className="bg-gray-800 cursor-pointer hover:bg-gray-700 text-white px-5 py-1.5 rounded-md font-semibold text-sm shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-800"
+          >
+            Reset
+          </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <section className="py-2 md:py-6 px-6 max-w-7xl mx-auto overflow-x-auto">
           <div className="relative min-w-max py-8 px-4">
-            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 rounded-full" />
+            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2 z-0 rounded-full" />
 
             <div className="flex items-center gap-24 relative z-10">
               {timelineCards
@@ -250,10 +370,10 @@ export default function Home() {
                     <button
                       key={timeline.id}
                       onClick={() => handleTimelineClick(timeline)}
-                      className="group relative flex flex-col items-center"
+                      className="group relative cursor-pointer flex flex-col items-center justify-center focus:outline-none hover:animate-pulse"
                     >
                       <span
-                        className={`absolute -top-8 -left-1 whitespace-nowrap font-medium transition-all ${
+                        className={`absolute -top-10 whitespace-nowrap font-medium transition-all duration-300 ${
                           isSelected
                             ? "text-blue-600 scale-110"
                             : "text-gray-500 group-hover:text-blue-500"
@@ -261,12 +381,11 @@ export default function Home() {
                       >
                         {timeline.timeline}
                       </span>
-
                       <div
-                        className={`w-5 h-5 rounded-full border-4 transition-all ${
+                        className={`w-5 h-5 rounded-full border-4 transition-all duration-300 ${
                           isSelected
                             ? "bg-blue-600 border-blue-200 scale-125 shadow-md"
-                            : "bg-white border-gray-300 group-hover:border-blue-400"
+                            : "bg-white border-gray-300 group-hover:border-blue-400 group-hover:scale-110"
                         }`}
                       />
                     </button>
@@ -274,7 +393,7 @@ export default function Home() {
                 })}
             </div>
           </div>
-        </div>
+        </section>
       </section>
 
       {/* --- TIMELINE DETAIL IMAGE --- */}

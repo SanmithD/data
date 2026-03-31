@@ -1,112 +1,172 @@
 import React from "react";
-import { ExternalLink, Phone, Globe, ArrowBigLeft } from "lucide-react";
+import { ExternalLink, Globe, ArrowBigLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function AboutPage() {
-  const naviagte = useNavigate();
+  const navigate = useNavigate();
 
   return (
     <div className="max-w-5xl mx-auto p-6 md:p-10">
-      <button onClick={() => naviagte(-1)} className="cursor-pointer" ><ArrowBigLeft/></button>
+      <button onClick={() => navigate(-1)} className="cursor-pointer mb-4">
+        <ArrowBigLeft />
+      </button>
+
       {/* Header */}
       <h1 className="text-4xl font-bold text-gray-800 mb-6">
-        About Marudhar Arts
+        About NumisVault
       </h1>
 
       {/* Intro */}
-      <p className="text-gray-600 leading-relaxed mb-8">
-        Marudhar Arts is one of India’s leading numismatic auction houses, based
-        in Bangalore, specializing in rare coins, banknotes, stamps, and
-        historical collectibles. Established in 1966, the company has grown into
-        a trusted platform for collectors and investors across the globe.
+      <p className="text-gray-600 leading-relaxed mb-6">
+        <strong>NumisVault</strong> is a dedicated platform for exploring the
+        fascinating world of numismatics — from ancient coins and banknotes to
+        the stories of civilizations behind them. Our goal is to make historical
+        knowledge simple, engaging, and accessible for collectors, learners, and
+        enthusiasts.
       </p>
 
-      {/* Links */}
-      <div className="flex flex-wrap gap-4 mb-10">
+      <p className="text-gray-600 leading-relaxed mb-10">
+        Built as a knowledge extension of trusted industry platforms, NumisVault
+        bridges the gap between historical research and modern collecting.
+      </p>
+
+      {/* Marudhar Arts Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          About Marudhar Arts
+        </h2>
+
+        {/* Logo */}
+        <img
+          src="/marudhara-logo.jpg"
+          alt="Marudhar Arts Logo"
+          className="h-16 mb-4"
+        />
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          Founded in 1966 by <strong>Mr. Prem Ratan Maru</strong>, Marudhar Arts
+          is one of India’s most trusted and respected numismatic auction houses
+          based in Bangalore. It is the only company in South India to hold an
+          official antique license, reflecting its credibility, expertise, and
+          integrity in the field.
+        </p>
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          What began as a hobby of collecting stamps in Bikaner, Rajasthan,
+          evolved into a pioneering business that transformed coin and stamp
+          collecting into a recognized investment avenue in India — while still
+          preserving its core collector spirit.
+        </p>
+
+        <p className="text-gray-600 leading-relaxed mb-6">
+          Under the leadership of <strong>Mr. Rajender Maru</strong>, the company
+          expanded into global markets and became a digital pioneer by launching
+          Asia’s first 100% online numismatic auction in 2007.
+        </p>
+
+        {/* Highlights */}
+        <ul className="space-y-3 text-gray-600 mb-6">
+          <li>• Established in 1966 with decades of trust</li>
+          <li>• First numismatic company in Asia to conduct e-auctions</li>
+          <li>• Organizer of India’s first National Numismatic Exhibition (2011)</li>
+          <li>• Strong presence in global collector communities</li>
+        </ul>
+
         <a
           href="https://www.marudhararts.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="text-blue-600 flex items-center gap-1 hover:underline"
         >
-          <Globe size={18} />
-          Visit Website
+          Visit Marudhar Arts <ExternalLink size={14} />
         </a>
+      </section>
+
+      {/* Leadership */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          Leadership & Legacy
+        </h2>
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          <strong>Mr. Rajender Maru</strong>, Chairman & CEO, is a globally
+          recognized numismatist and author of{" "}
+          <em>South Asian Coins and Paper Money</em>, one of the most respected
+          references in the field.
+        </p>
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          The legacy continues with <strong>Mr. Archie Maru</strong>, Director of
+          Marudhar Arts, a qualified numismatist and auctioneer with academic
+          specialization in Numismatics and Archaeology.
+        </p>
+
+        <p className="text-gray-600 leading-relaxed">
+          Together, they represent three generations of expertise, combining
+          traditional knowledge with modern digital innovation.
+        </p>
+      </section>
+
+      {/* CollectNDeal */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          CollectNDeal Platform
+        </h2>
+
+        <img
+          src="/cnd-logo.jpg"
+          alt="CollectNDeal Logo"
+          className="h-16 mb-4"
+        />
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          CollectNDeal is a modern digital platform powered by Marudhar Arts,
+          designed to connect collectors, dealers, and enthusiasts in one place.
+        </p>
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          It enables users to explore exhibitions, discover collectibles, and
+          engage with the numismatic community beyond traditional auctions.
+        </p>
 
         <a
-          href="https://www.marudhararts.com/contact"
+          href="https://collectndeal.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition"
+          className="text-blue-600 flex items-center gap-1 hover:underline"
         >
-          <Phone size={18} />
-          Contact Us
+          Visit CollectNDeal <ExternalLink size={14} />
         </a>
-      </div>
-
-      {/* About Theme */}
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-3">Our Theme</h2>
-        <p className="text-gray-600 leading-relaxed">
-          Our core philosophy revolves around preserving history through
-          collectibles. Marudhar Arts bridges the gap between the past and
-          present by bringing rare and valuable artifacts to collectors
-          worldwide through transparent and secure auction systems.
-        </p>
       </section>
 
-      {/* Ownership */}
-      <section className="mb-10">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Three Generations of Expertise
-        </h2>
-
-        <ul className="space-y-4 text-gray-600">
-          <li>
-            <strong>First Generation:</strong> Founded in 1966 as a passion for
-            collecting coins and stamps, laying the foundation of the business.
-          </li>
-          <li>
-            <strong>Second Generation:</strong> Expanded operations into a
-            professional numismatic business, introducing expertise in rare
-            collectibles and auctions.
-          </li>
-          <li>
-            <strong>Third Generation:</strong> Modernized the company by
-            introducing online auctions, making it one of Asia’s pioneers in
-            digital numismatic trading.
-          </li>
-        </ul>
-      </section>
-
-      {/* Second Company */}
-      <section className="mb-10">
+      {/* Physical Presence */}
+      <section className="mb-12">
         <h2 className="text-2xl font-semibold text-gray-800 mb-3">
-          Marudhara Arts Inc.
+          Physical Gallery
         </h2>
-        <p className="text-gray-600 leading-relaxed mb-2">
-          Alongside Marudhar Arts, the group also operates{" "}
-          <strong>Marudhara Arts Inc.</strong>, a textile and home furnishing
-          company based in Jaipur.
+
+        <p className="text-gray-600 leading-relaxed mb-4">
+          Marudhar Arts operates an exclusive showroom in Basavanagudi,
+          Bangalore, showcasing rare coins from Ancient India, Mughal Era,
+          British India, and Republic India.
         </p>
 
         <p className="text-gray-600 leading-relaxed">
-          This division specializes in manufacturing and exporting products such
-          as bed linens, quilts, cushion covers, and home décor items, catering
-          to both domestic and international markets.
+          The collection also includes rare stamps, medals, badges, and
+          historical artifacts, offering collectors a unique in-person
+          experience.
         </p>
       </section>
 
       {/* Closing */}
       <section>
         <h2 className="text-2xl font-semibold text-gray-800 mb-3">
-          Legacy & Trust
+          Our Vision
         </h2>
         <p className="text-gray-600 leading-relaxed">
-          With decades of experience and a strong reputation in the field,
-          Marudhar Arts continues to serve collectors, historians, and investors
-          by providing authentic, rare, and valuable collectibles through a
-          trusted auction platform.
+          NumisVault builds upon this strong legacy to create a digital knowledge
+          hub where history meets modern collectors — preserving the past while
+          educating the future.
         </p>
       </section>
     </div>

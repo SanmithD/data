@@ -12,9 +12,16 @@ export default function AboutPage() {
       </button>
 
       {/* Header */}
-      <h1 className="text-4xl font-bold text-gray-800 mb-6">
-        About NumisVault
-      </h1>
+      <div className="flex items-center gap-3">
+        <img
+          src="/numis-logo.png"
+          alt="NumisVault Logo"
+          className="h-16 mb-4"
+        />
+        <h1 className="text-4xl font-bold text-gray-800 mb-6">
+          About NumisVault
+        </h1>
+      </div>
 
       {/* Intro */}
       <p className="text-gray-600 leading-relaxed mb-6">
@@ -59,16 +66,18 @@ export default function AboutPage() {
         </p>
 
         <p className="text-gray-600 leading-relaxed mb-6">
-          Under the leadership of <strong>Mr. Rajender Maru</strong>, the company
-          expanded into global markets and became a digital pioneer by launching
-          Asia’s first 100% online numismatic auction in 2007.
+          Under the leadership of <strong>Mr. Rajender Maru</strong>, the
+          company expanded into global markets and became a digital pioneer by
+          launching Asia’s first 100% online numismatic auction in 2007.
         </p>
 
         {/* Highlights */}
         <ul className="space-y-3 text-gray-600 mb-6">
           <li>• Established in 1966 with decades of trust</li>
           <li>• First numismatic company in Asia to conduct e-auctions</li>
-          <li>• Organizer of India’s first National Numismatic Exhibition (2011)</li>
+          <li>
+            • Organizer of India’s first National Numismatic Exhibition (2011)
+          </li>
           <li>• Strong presence in global collector communities</li>
         </ul>
 
@@ -96,8 +105,8 @@ export default function AboutPage() {
         </p>
 
         <p className="text-gray-600 leading-relaxed mb-4">
-          The legacy continues with <strong>Mr. Archie Maru</strong>, Director of
-          Marudhar Arts, a qualified numismatist and auctioneer with academic
+          The legacy continues with <strong>Mr. Archie Maru</strong>, Director
+          of Marudhar Arts, a qualified numismatist and auctioneer with academic
           specialization in Numismatics and Archaeology.
         </p>
 
@@ -146,7 +155,7 @@ export default function AboutPage() {
         </h2>
 
         <p className="text-gray-600 leading-relaxed mb-4">
-          Marudhar Arts operates an exclusive showroom in Basavanagudi,
+          Marudhar Arts operates an exclusive showroom in MG Road,
           Bangalore, showcasing rare coins from Ancient India, Mughal Era,
           British India, and Republic India.
         </p>
@@ -164,9 +173,9 @@ export default function AboutPage() {
           Our Vision
         </h2>
         <p className="text-gray-600 leading-relaxed">
-          NumisVault builds upon this strong legacy to create a digital knowledge
-          hub where history meets modern collectors — preserving the past while
-          educating the future.
+          NumisVault builds upon this strong legacy to create a digital
+          knowledge hub where history meets modern collectors — preserving the
+          past while educating the future.
         </p>
       </section>
     </div>

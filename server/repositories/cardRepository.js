@@ -2,27 +2,26 @@ import mongoose from "mongoose";
 import { getRedis } from "../config/redis.js";
 import Card from "../models/Card.js";
 import { AppError } from "../utils/AppError.js";
+import TimelineModel from "../models/TimelineCard.js";
 import mongodbAddFieldsForRegexNumberSearch from "../utils/mongodbAddFieldsForRegexNumberSearch.util.js";
 
 function timePeriodToNumber(str) {
   if (!str) return null;
-  if (str === null || str === undefined) return null;
-  if (typeof str === "number") return str; // already numeric
-  if (typeof str !== "string") return null; // unexpected type, bail
+  if (typeof str === "number") return str;
+  if (typeof str !== "string") return null;
 
-  const s = str.trim().toUpperCase().replace(/\s+/g, " ");
+  const s = str.trim().toUpperCase().replace(/\s+/g, "");
 
-  // Match number + optional era label
-  const match = s.match(/^(-?\d+(?:\.\d+)?)\s*(BCE|BC|CE|AD)?$/);
+  // Match number + optional era (no space required now)
+  const match = s.match(/^(-?\d+(?:\.\d+)?)(BCE|BC|CE|AD)?$/);
   if (!match) return null;
 
   let num = parseFloat(match[1]);
   const era = match[2];
 
   if (era === "BCE" || era === "BC") {
-    num = -Math.abs(num); // force negative
+    num = -Math.abs(num);
   }
-  // CE, AD, or no label → positive (already is)
 
   return num;
 }
@@ -221,11 +220,19 @@ class CardRepository {
   }
 
   async updateCard(id, data) {
+    // 👇 compute numeric values if time fields exist
+    if (data.start_time) {
+      data.start_time_num = timePeriodToNumber(data.start_time);
+    }
+
+    if (data.end_time) {
+      data.end_time_num = timePeriodToNumber(data.end_time);
+    }
+
     const card = await Card.findByIdAndUpdate(id, data, {
       returnDocument: "after",
     });
 
-    // FIX: Clear the specific card cache and all list caches
     const redis = getRedis();
     await redis.del(`card:single:${id}`);
     await this.#clearListCaches();
@@ -294,7 +301,47 @@ class CardRepository {
     if (cached) return JSON.parse(cached);
 
     const skip = (page - 1) * limit;
-    const matchFilter = { timelineId: timelineIdInt, parentCard: null };
+
+    const currentTimeline = await TimelineModel.findOne({
+      id: timelineIdInt,
+    }).select("timeline position");
+
+    const nextTimeline = await TimelineModel.findOne({
+      position: { $gt: currentTimeline.position },
+    })
+      .sort({ position: 1 }) // nearest next
+      .select("timeline position");
+
+    const currentTime = timePeriodToNumber(currentTimeline.timeline);
+    const nextTime = nextTimeline
+      ? timePeriodToNumber(nextTimeline.timeline)
+      : null;
+
+    let rangeStart = currentTime;
+    let rangeEnd = nextTime !== null ? nextTime : Infinity;
+
+    // safety normalization
+    if (rangeStart > rangeEnd) {
+      [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+    }
+
+    // ✅ overlap condition (THIS IS PERFECT ALREADY)
+    const matchFilter = {
+      parentCard: null,
+      $or: [
+        // 1️⃣ starts within range
+        { start_time_num: { $gte: rangeStart, $lt: rangeEnd } },
+
+        // 2️⃣ ends within range
+        { end_time_num: { $gte: rangeStart, $lt: rangeEnd } },
+
+        // 3️⃣ spans across entire range
+        {
+          start_time_num: { $lte: rangeStart },
+          end_time_num: { $gte: rangeEnd },
+        },
+      ],
+    };
 
     const [cards, totalCards] = await Promise.all([
       Card.aggregate([

@@ -1,5 +1,5 @@
 import express from "express";
-import { createPageTitle, deletePageTitle, getPageTitleByParentId, updatePageTitle } from "../controllers/pageTitleController.js";
+import { createPageTitle, deletePageTitle, getPageTitleByParentId, updatePageTitle } from "../controllers/page_title.controller.js";
 
 const pageTitleRouter = express.Router();
 

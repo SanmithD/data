@@ -4,7 +4,7 @@ import {
   getSlider,
   updateSlider,
   deleteSlider,
-} from "../controllers/heroSliderController.js";
+} from "../controllers/hero_slider.controller.js";
 
 const heroSliderRoutes = express.Router();
 

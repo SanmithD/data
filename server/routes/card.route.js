@@ -1,6 +1,6 @@
 // routes/cardRoutes.js
 import express from "express";
-import { createCard, deleteCard, getCardById, getCards, getCardsByTimeline, getChildCards, reorderCards, searchCards, updateCard } from "../controllers/cardController.js";
+import { createCard, deleteCard, getCardById, getCards, getCardsByTimeline, getChildCards, reorderCards, searchCards, updateCard } from "../controllers/card.controller.js";
 
 const router = express.Router();
 

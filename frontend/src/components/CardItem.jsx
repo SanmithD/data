@@ -144,7 +144,7 @@ export default function CardItem({ card, id }) {
                 From {card.start_time} to {card.end_time || "?"}
               </span>
             )}
-            {card?.timelineData?.[0]?.timeline && (
+            {/* {card?.timelineData?.[0]?.timeline && (
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                 bg-gray-50 border border-gray-100 text-[11px] font-medium text-gray-500"
@@ -156,7 +156,7 @@ export default function CardItem({ card, id }) {
                 />
                 Timeline {card.timelineData[0].timeline}
               </span>
-            )}
+            )} */}
           </div>
         )}
 

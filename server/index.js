@@ -3,11 +3,12 @@ import dotenv from "dotenv";
 import express from "express";
 import connectDB from "./config/db.js";
 import { connectRedis } from './config/redis.js';
-import cardRoutes from "./routes/cardRoutes.js";
-import timeRouter from './routes/timelineCardRoutes.js';
-import pageTitleRouter from './routes/pageTitleRoutes.js';
-import heroSliderRoutes from './routes/heroSliderRoutes.js';
-import timelineDetailRoutes from './routes/timelineDetailRoutes.js';
+import cardRoutes from "./routes/card.route.js";
+import timeRouter from './routes/timeline_card.route.js';
+import pageTitleRouter from './routes/page_title.route.js';
+import heroSliderRoutes from './routes/hero_slider.route.js';
+import timelineDetailRoutes from './routes/timeline_detail.route.js';
+import bookRouter from './routes/book.route.js';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use("/api", timeRouter);
 app.use("/api/page", pageTitleRouter);
 app.use("/api/hero-slider", heroSliderRoutes);
 app.use("/api/timeline-detail", timelineDetailRoutes);
+app.use("/api/books", bookRouter);
 
 const PORT = process.env.PORT;
 

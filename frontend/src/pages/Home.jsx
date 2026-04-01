@@ -162,17 +162,17 @@ export default function Home() {
         >
           {/* Lines */}
           <span
-            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+            className={`absolute w-5 h-0.5 bg-white transition-all duration-300 ${
               menuOpen ? "rotate-45" : "-translate-y-1.5"
             }`}
           />
           <span
-            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+            className={`absolute w-5 h-0.5 bg-white transition-all duration-300 ${
               menuOpen ? "opacity-0" : ""
             }`}
           />
           <span
-            className={`absolute w-5 h-[2px] bg-white transition-all duration-300 ${
+            className={`absolute w-5 h-0.5 bg-white transition-all duration-300 ${
               menuOpen ? "-rotate-45" : "translate-y-1.5"
             }`}
           />
@@ -197,7 +197,7 @@ export default function Home() {
               }}
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300
-  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
             >
               Slide Images
             </button>
@@ -213,7 +213,7 @@ export default function Home() {
               }}
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300
-  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
             >
               + Create Diary
             </button>
@@ -225,9 +225,21 @@ export default function Home() {
               }}
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300
-  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
             >
               Timeline
+            </button>
+
+            <button
+              onClick={() => {
+                navigate("/books");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
+            >
+              Books
             </button>
 
             <a
@@ -236,7 +248,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300
-  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
             >
               Contact
             </a>
@@ -248,7 +260,7 @@ export default function Home() {
               }}
               className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
   rounded-lg transition duration-300
-  hover:bg-white/10 hover:text-red-300 hover:translate-x-[-2px]"
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
             >
               About
             </button>

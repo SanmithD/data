@@ -4,7 +4,7 @@ import {
   getDetail,
   updateDetail,
   deleteDetail,
-} from "../controllers/timelineDetailController.js";
+} from "../controllers/timeline_detail.controller.js";
 
 const timelineDetailRoutes = express.Router();
 

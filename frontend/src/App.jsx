@@ -6,6 +6,9 @@ import AddCardPage from "./pages/AddCardModal";
 import CardDetails from "./pages/CardDetails";
 import Home from "./pages/Home";
 import TimelinePage from "./pages/TimelinePage";
+import BooksAdmin from "./pages/BooksAdmin";
+import AddEditBookPage from "./pages/AddEditBookPage";
+import BookDetails from "./pages/BookDetails";
 
 export default function App() {
 
@@ -24,6 +27,10 @@ export default function App() {
         <Route path="/slide-images" element={<HeroSliderAdmin />} />
         <Route path="/addCard" element={<AddCardPage />} />
         <Route path="/addCard/:parentId" element={<AddCardPage />} />
+        <Route path="/books" element={<BooksAdmin />} />
+        <Route path="/manage-books" element={<AddEditBookPage />} />
+        <Route path="/manage-books/:bookId" element={<AddEditBookPage />} />
+        <Route path="/view-book/:bookId" element={<BookDetails />} />
       </Routes>
 
     </BrowserRouter>

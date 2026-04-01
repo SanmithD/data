@@ -157,6 +157,18 @@ export default function Home() {
             className="flex flex-col gap-0.5 md:gap-2 p-1 md:p-4 rounded-2xl
       bg-black/70 backdrop-blur-xl justify-center border border-white/10 shadow-2xl"
           >
+            <button
+              onClick={() => {
+                navigate("/books");
+                setMenuOpen(false);
+              }}
+              className="text-right px-4 py-2 text-white text-sm font-medium cursor-pointer tracking-wide
+  rounded-lg transition duration-300
+  hover:bg-white/10 hover:text-red-300 hover:-translate-x-0.5"
+            >
+              Books
+            </button>
+
             <a
               href="https://marudhararts.com/contact"
               target="_blank"

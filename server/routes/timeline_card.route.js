@@ -1,6 +1,6 @@
 // routes/cardRoutes.js
 import express from "express";
-import { createTimelineCard, deleteTimelineCard, getTimelineCardById, getTimelineCards, reorderTimeCards, updateTimelineCard } from "../controllers/timelineCardController.js";
+import { createTimelineCard, deleteTimelineCard, getTimelineCardById, getTimelineCards, reorderTimeCards, updateTimelineCard } from "../controllers/timeline_card.controller.js";
 
 const timeRouter = express.Router();
 

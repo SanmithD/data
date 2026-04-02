@@ -70,8 +70,8 @@ const bookSchema = new mongoose.Schema(
     },
 
     isPublished: {
-      type: Boolean,
-      default: false,
+      type: Number,
+      default: 0,
       index: true,
     },
 

@@ -22,6 +22,10 @@ const pageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+    },
 
     // optional enhancements
     wordCount: Number,

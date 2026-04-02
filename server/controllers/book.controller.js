@@ -1,6 +1,5 @@
 import bookRepository from "../repositories/book.repository.js";
 
-
 export const createBook = async (req, res) => {
   try {
     const book = await bookRepository.createBook(req.body);
@@ -12,15 +11,27 @@ export const createBook = async (req, res) => {
   }
 };
 
-/*
-GET ALL BOOKS (PAGINATED)
-*/
 export const getBooks = async (req, res) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+    const {
+      page_enabled,
+      limit,
+      page,
+      searchDetails,
+      searchDetailsAnd,
+      sortDetails,
+      searchQuery,
+    } = req.body;
 
-    const data = await bookRepository.getBooks(page, limit);
+    const data = await bookRepository.getBooks({
+      page_enabled,
+      limit,
+      page,
+      searchDetails,
+      searchDetailsAnd,
+      sortDetails,
+      searchQuery,
+    });
 
     res.json(data);
   } catch (error) {
@@ -29,9 +40,6 @@ export const getBooks = async (req, res) => {
   }
 };
 
-/*
-GET BOOK BY bookId (NOT _id)
-*/
 export const getBookById = async (req, res) => {
   try {
     const book = await bookRepository.getBookById(req.params.bookId);

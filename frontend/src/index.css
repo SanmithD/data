@@ -1,1 +1,84 @@
 @import "tailwindcss";
+
+.rich-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 1.25rem 0 0.75rem;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.rich-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1rem 0 0.75rem;
+    color: #111827;
+}
+
+.rich-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+    color: #111827;
+}
+
+.rich-content p {
+    margin: 0.75rem 0;
+    line-height: 1.9;
+    color: #374151;
+}
+
+.rich-content blockquote {
+    border-left: 4px solid #d1d5db;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #4b5563;
+    font-style: italic;
+    background: #f9fafb;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.rich-content ol {
+    list-style: decimal;
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.rich-content ul {
+    list-style: disc;
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.rich-content li {
+    margin: 0.4rem 0;
+    color: #374151;
+}
+
+.rich-content strong {
+    font-weight: 700;
+    color: #111827;
+}
+
+.rich-content em {
+    font-style: italic;
+}
+
+.rich-content img {
+    border-radius: 0.75rem;
+    margin: 1rem 0;
+    max-width: 100%;
+}
+
+.rich-content a {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.rich-content hr {
+    margin: 1.5rem 0;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+}

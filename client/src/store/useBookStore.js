@@ -8,13 +8,30 @@ export const useBookStore = create((set) => ({
   bookDetails: null,
   loading: false,
 
-  /*
-  📚 FETCH BOOKS
-  */
-  fetchBooks: async (page = 1, limit = 10, append = false) => {
+  fetchBooks: async (
+    page_enabled = "y",
+    page = 1,
+    limit = 10,
+    searchQuery = "",
+    searchDetails = [],
+    searchDetailsAnd = [],
+    sortDetails = { sortKey: "createdAt", sortType: -1 },
+    append = false,
+  ) => {
     set({ loading: true });
+
     try {
-      const res = await api.get(`/books/books?page=${page}&limit=${limit}`);
+      const payload = {
+        page_enabled,
+        page,
+        limit,
+        searchQuery,
+        searchDetails,
+        searchDetailsAnd,
+        sortDetails,
+      };
+
+      const res = await api.post(`/books/books`, payload);
 
       set((state) => ({
         books: append ? [...state.books, ...res.data.books] : res.data.books,
@@ -23,16 +40,16 @@ export const useBookStore = create((set) => ({
         currentPage: res.data.currentPage,
         loading: false,
       }));
+
+      return res.data;
     } catch (err) {
       console.error("Fetch books error:", err);
       toast.error("Failed to fetch books");
       set({ loading: false });
+      throw err;
     }
   },
 
-  /*
-  📘 FETCH BOOK BY ID
-  */
   fetchBookById: async (bookId) => {
     try {
       const res = await api.get(`/books/book/${bookId}`);

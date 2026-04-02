@@ -23,7 +23,7 @@ const bookRouter = express.Router();
 bookRouter.post("/book", createBook);
 
 // Get all books (pagination)
-bookRouter.get("/books", getBooks);
+bookRouter.post("/books", getBooks);
 
 // Get single book (by bookId)
 bookRouter.get("/book/:bookId", getBookById);

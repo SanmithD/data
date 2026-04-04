@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor";
 import { useBookStore } from "../store/useBookStore";
+import { usePageStore } from "../store/usePageStore";
 import useDocumentTitle from "../utils/useDocumentTitle";
 
 /* ───────── UI HELPERS ───────── */
@@ -47,6 +48,8 @@ export default function AddEditBookPage() {
   const { bookId } = useParams();
 
   const { createBook, updateBook, fetchBookById, bookDetails } = useBookStore();
+  const { pages, fetchPages, resetPages } = usePageStore();
+
   const isEdit = Boolean(bookId);
   const [loading, setLoading] = useState(false);
   const [coverPreview, setCoverPreview] = useState(null);
@@ -57,65 +60,110 @@ export default function AddEditBookPage() {
     description: "",
     price: "",
     category: "",
-    pages: [{ title: "Page 1", content: "" }], // default page
+    isPublished: 0,
+    cover_image: "",
+    pages: [{ title: "Page 1", content: "" }],
   });
 
-  // Load book for edit
+  // Load book details + pages in edit mode
   useEffect(() => {
-    if (isEdit) fetchBookById(bookId);
+    if (isEdit && bookId) {
+      fetchBookById(bookId);
+      fetchPages(bookId, 1, 1000); // fetch all pages
+    }
+
+    return () => {
+      resetPages();
+    };
   }, [bookId]);
 
+  // Set main book data when editing
   useEffect(() => {
     if (isEdit && bookDetails) {
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         title: bookDetails.title || "",
         author: bookDetails.author || "",
         description: bookDetails.description || "",
-        price: bookDetails.price || "",
+        price: bookDetails.price ?? "",
         category: bookDetails.category || "",
-        pages: bookDetails.pages?.length
-          ? bookDetails.pages
-          : [{ title: "Page 1", content: "" }],
-      });
+        isPublished:
+          bookDetails.isPublished === 1 || bookDetails.isPublished === 0
+            ? bookDetails.isPublished
+            : 0,
+      }));
+
       setCoverPreview(bookDetails.cover_image?.url || null);
     }
   }, [bookDetails]);
 
-  /* Add inside your AddEditBookPage component */
+  // Set pages from page store when editing
+  useEffect(() => {
+    if (isEdit) {
+      setFormData((prev) => ({
+        ...prev,
+        pages:
+          pages?.length > 0
+            ? pages.map((page, index) => ({
+                id: page.id,
+                title: page.title || `Page ${index + 1}`,
+                content: page.content || "",
+                pageNumber: page.pageNumber || index + 1,
+              }))
+            : [{ title: "Page 1", content: "" }],
+      }));
+    }
+  }, [pages]);
 
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
     setCoverPreview(URL.createObjectURL(file));
 
-    // ✅ Convert File → base64 string so it can be sent as JSON
     const reader = new FileReader();
     reader.onloadend = () => {
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-      if (file.size > MAX_SIZE) {
-        toast.error("Image must be under 5MB");
-        return;
-      }
       setFormData((prev) => ({ ...prev, cover_image: reader.result }));
     };
     reader.readAsDataURL(file);
   };
 
-  // Handle input
+  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "isPublished"
+          ? Number(value)
+          : name === "price"
+            ? value
+            : value,
+    }));
   };
 
-  // Handle page content
+  // Handle page field change
   const handlePageChange = (index, key, value) => {
     const updatedPages = [...formData.pages];
-    updatedPages[index][key] = value;
-    setFormData((prev) => ({ ...prev, pages: updatedPages }));
+    updatedPages[index] = {
+      ...updatedPages[index],
+      [key]: value,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      pages: updatedPages,
+    }));
   };
 
-  // Add new page
+  // Add page
   const addPage = () => {
     const newPageNum = formData.pages.length + 1;
     setFormData((prev) => ({
@@ -127,16 +175,36 @@ export default function AddEditBookPage() {
   // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+
+    if (!formData.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
 
     setLoading(true);
     try {
+      const payload = {
+        ...formData,
+        price: Number(formData.price),
+        isPublished: Number(formData.isPublished),
+        pages: formData.pages.map((page, index) => ({
+          id: page.id,
+          title: page.title || `Page ${index + 1}`,
+          content: page.content || "",
+          pageNumber: index + 1,
+        })),
+      };
+
       if (isEdit) {
-        await updateBook(bookId, formData);
+        await updateBook(bookId, payload);
       } else {
-        await createBook(formData);
+        await createBook(payload);
       }
+
       navigate("/books");
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -185,11 +253,9 @@ export default function AddEditBookPage() {
                       className="h-32 object-contain mb-2"
                     />
                   ) : (
-                    <>
-                      <p className="text-sm">
-                        Drag & drop or click to upload cover image
-                      </p>
-                    </>
+                    <p className="text-sm">
+                      Drag & drop or click to upload cover image
+                    </p>
                   )}
                   <input
                     type="file"
@@ -201,7 +267,7 @@ export default function AddEditBookPage() {
                 </div>
               </div>
 
-              <div className="mb-5">
+              <div className="mb-5 mt-5">
                 <FieldLabel required>Title</FieldLabel>
                 <InputBase
                   name="title"
@@ -236,6 +302,20 @@ export default function AddEditBookPage() {
                   />
                 </div>
 
+                <div>
+                  <FieldLabel required>Status</FieldLabel>
+                  <select
+                    name="isPublished"
+                    value={formData.isPublished}
+                    onChange={handleChange}
+                    className="w-full px-3.5 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl
+                    outline-none transition-all focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                  >
+                    <option value={0}>Freeze</option>
+                    <option value={1}>Publish</option>
+                  </select>
+                </div>
+
                 <div className="sm:col-span-2">
                   <FieldLabel>
                     <Tag size={13} /> Category
@@ -264,6 +344,7 @@ export default function AddEditBookPage() {
             {/* Pages */}
             <div className="px-7 py-6 border-b">
               <SectionLabel>Pages</SectionLabel>
+
               {formData.pages.map((page, index) => (
                 <div
                   key={index}
@@ -277,6 +358,7 @@ export default function AddEditBookPage() {
                     }
                     placeholder={`Page ${index + 1} title`}
                   />
+
                   <div className="mt-3">
                     <FieldLabel>Content</FieldLabel>
                     <RichTextEditor
@@ -303,6 +385,7 @@ export default function AddEditBookPage() {
               <p className="text-xs text-gray-400">
                 <span className="text-red-500">*</span> Required fields
               </p>
+
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -315,8 +398,7 @@ export default function AddEditBookPage() {
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-xl
-                  hover:bg-indigo-700 disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {loading && <Loader2 size={15} className="animate-spin" />}
                   {isEdit ? "Update Book" : "Create Book"}

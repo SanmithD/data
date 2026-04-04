@@ -1,9 +1,13 @@
 import { useEffect } from "react";
-import { useBookStore } from "../store/useBookStore";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useBookStore } from "../store/useBookStore";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 export default function BooksAdmin() {
+
+  useDocumentTitle("Manage Book | NumisVault");
+
   const { books, fetchBooks, deleteBook, loading } = useBookStore();
   const navigate = useNavigate();
 

@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor";
 import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 function SectionLabel({ children }) {
   return (
@@ -35,6 +36,9 @@ function InputBase({ className = "", ...props }) {
 }
 
 export default function AddCardPage() {
+
+  useDocumentTitle("Add Dairy | NumisVault");
+
   const navigate = useNavigate();
   const { parentId } = useParams();
   const createCard = useCardStore((s) => s.createCard);

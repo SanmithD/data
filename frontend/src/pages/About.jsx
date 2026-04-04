@@ -1,8 +1,11 @@
-import React from "react";
-import { ExternalLink, Globe, ArrowBigLeft } from "lucide-react";
+import { ArrowBigLeft, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 export default function AboutPage() {
+
+  useDocumentTitle("About | NumisVault");
+
   const navigate = useNavigate();
 
   return (

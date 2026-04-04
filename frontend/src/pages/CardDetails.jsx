@@ -31,6 +31,7 @@ import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
 import { usePageTitleStore } from "../store/usePageTitleStore";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 // ── Shared input class ───────────────────────────────────────────────────────
 const inputCls =
@@ -39,6 +40,9 @@ const inputCls =
   "focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10";
 
 export default function CardDetails() {
+
+  useDocumentTitle("Diary Details | NumisVault");
+
   const { id } = useParams();
   const navigate = useNavigate();
   const [lightboxOpen, setLightboxOpen] = useState(false);

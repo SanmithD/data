@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useBookStore } from "../store/useBookStore";
-import { usePageStore } from "../store/usePageStore";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
+import { useBookStore } from "../store/useBookStore";
+import { usePageStore } from "../store/usePageStore";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 export default function BookDetails() {
+
+  useDocumentTitle("Book Details | NumisVault");
+
   const { bookId } = useParams();
 
   const navigate = useNavigate();

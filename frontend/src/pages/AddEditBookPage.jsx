@@ -1,10 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ArrowLeft, Loader2, Tag, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor";
 import { useBookStore } from "../store/useBookStore";
-import toast from "react-hot-toast";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 /* ───────── UI HELPERS ───────── */
 
@@ -39,6 +40,9 @@ function InputBase({ className = "", ...props }) {
 /* ───────── MAIN PAGE ───────── */
 
 export default function AddEditBookPage() {
+
+  useDocumentTitle("Add Book | NumisVault");
+
   const navigate = useNavigate();
   const { bookId } = useParams();
 

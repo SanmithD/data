@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import express from "express";
 import connectDB from "./config/db.js";
 import { connectRedis } from './config/redis.js';
-import cardRoutes from "./routes/card.route.js";
-import timeRouter from './routes/timeline_card.route.js';
-import pageTitleRouter from './routes/page_title.route.js';
-import heroSliderRoutes from './routes/hero_slider.route.js';
-import timelineDetailRoutes from './routes/timeline_detail.route.js';
 import bookRouter from './routes/book.route.js';
+import cardRoutes from "./routes/card.route.js";
+import heroSliderRoutes from './routes/hero_slider.route.js';
+import pageTitleRouter from './routes/page_title.route.js';
+import timeRouter from './routes/timeline_card.route.js';
+import timelineDetailRoutes from './routes/timeline_detail.route.js';
 
 dotenv.config();
 

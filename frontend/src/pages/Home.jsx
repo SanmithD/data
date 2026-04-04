@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/sortable";
 import { ChevronDown, RotateCcw, Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CardItem from "../components/CardItem";
@@ -20,9 +21,12 @@ import { useCardStore } from "../store/cardStore";
 import { useTimelineCardStore } from "../store/timelineCardStore";
 import { useCardSearchStore } from "../store/useCardSearchStore";
 import { useTimelineDetailStore } from "../store/useTimelineDetailStore";
-import { useNavigate } from "react-router-dom";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 export default function Home() {
+
+  useDocumentTitle("Home | NumisVault");
+
   const {
     cards,
     fetchCards,

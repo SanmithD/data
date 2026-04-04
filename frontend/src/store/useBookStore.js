@@ -7,14 +7,35 @@ export const useBookStore = create((set) => ({
   pages: [],
   bookDetails: null,
   loading: false,
+  isDeleting: false,
 
   /*
   📚 FETCH BOOKS
   */
-  fetchBooks: async (page = 1, limit = 10, append = false) => {
+  fetchBooks: async (
+    page_enabled = "y",
+    page = 1,
+    limit = 10,
+    searchQuery = "",
+    searchDetails = [],
+    searchDetailsAnd = [],
+    sortDetails = { sortKey: "createdAt", sortType: -1 },
+    append = false,
+  ) => {
     set({ loading: true });
+
     try {
-      const res = await api.get(`/books/books?page=${page}&limit=${limit}`);
+      const payload = {
+        page_enabled,
+        page,
+        limit,
+        searchQuery,
+        searchDetails,
+        searchDetailsAnd,
+        sortDetails,
+      };
+
+      const res = await api.post(`/books/books`, payload);
 
       set((state) => ({
         books: append ? [...state.books, ...res.data.books] : res.data.books,
@@ -23,10 +44,13 @@ export const useBookStore = create((set) => ({
         currentPage: res.data.currentPage,
         loading: false,
       }));
+
+      return res.data;
     } catch (err) {
       console.error("Fetch books error:", err);
       toast.error("Failed to fetch books");
       set({ loading: false });
+      throw err;
     }
   },
 
@@ -58,9 +82,6 @@ export const useBookStore = create((set) => ({
     }
   },
 
-  /*
-  ✏️ UPDATE BOOK
-  */
   updateBook: async (bookId, data) => {
     try {
       const res = await api.put(`/books/book/${bookId}`, data);
@@ -81,11 +102,8 @@ export const useBookStore = create((set) => ({
     }
   },
 
-  /*
-  ❌ DELETE BOOK
-  */
   deleteBook: async (bookId) => {
-    set({ loading: true });
+    set({ isDeleting: true });
     try {
       await api.delete(`/books/book/${bookId}`);
       toast.success("Deleted");
@@ -93,12 +111,12 @@ export const useBookStore = create((set) => ({
       set((state) => ({
         books: state.books.filter((b) => b.id !== bookId),
       }));
-      set({ bookDetails: null, loading: false });
+      set({ bookDetails: null, isDeleting: false });
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Delete failed");
     } finally {
-      set({ loading: false });
+      set({ isDeleting: false });
     }
   },
 

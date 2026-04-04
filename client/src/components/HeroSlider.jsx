@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, EffectFade } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-fade";
+import { Autoplay, EffectFade } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 import { useHeroSliderStore } from "../store/useHeroSliderStore";
 
 export default function HeroSlider() {
@@ -34,7 +34,7 @@ export default function HeroSlider() {
             {slider.images.map((img, idx) => (
               <SwiperSlide key={idx}>
                 <div
-                  className="w-full h-full bg-contain bg-center bg-no-repeat bg-black"
+                  className="w-full h-full bg-cover bg-center bg-no-repeat bg-black"
                   style={{
                     backgroundImage: `url(${
                       typeof img === "string" ? img : img.url

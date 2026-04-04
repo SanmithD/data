@@ -3,12 +3,13 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import HeroSliderAdmin from "./components/HeroSliderAdmin";
 import AboutPage from "./pages/About";
 import AddCardPage from "./pages/AddCardModal";
-import CardDetails from "./pages/CardDetails";
-import Home from "./pages/Home";
-import TimelinePage from "./pages/TimelinePage";
-import BooksAdmin from "./pages/BooksAdmin";
 import AddEditBookPage from "./pages/AddEditBookPage";
 import BookDetails from "./pages/BookDetails";
+import BooksAdmin from "./pages/BooksAdmin";
+import CardDetails from "./pages/CardDetails";
+import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
+import TimelinePage from "./pages/TimelinePage";
 
 export default function App() {
 
@@ -31,6 +32,9 @@ export default function App() {
         <Route path="/manage-books" element={<AddEditBookPage />} />
         <Route path="/manage-books/:bookId" element={<AddEditBookPage />} />
         <Route path="/view-book/:bookId" element={<BookDetails />} />
+
+
+        <Route path="/*" element={<NotFound />} />
       </Routes>
 
     </BrowserRouter>

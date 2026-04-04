@@ -21,6 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
 /* ================= SORTABLE ITEM ================= */
 function SortableItem({ card, openModal, handleDelete, movingId }) {
@@ -106,6 +107,9 @@ hover:shadow-[0_0_20px_5px_rgba(99,102,241,0.7)]"
 
 /* ================= MAIN PAGE ================= */
 export default function TimelinePage() {
+
+  useDocumentTitle("Timeline | NumisVault");
+
   const {
     timelineCards,
     fetchTimelineCards,

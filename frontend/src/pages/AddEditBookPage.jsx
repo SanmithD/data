@@ -1,47 +1,164 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { ArrowLeft, Loader2, Tag, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronDown,
+  GripVertical,
+  ImagePlus,
+  Loader2,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import RichTextEditor from "../components/RichTextEditor";
 import { useBookStore } from "../store/useBookStore";
 import { usePageStore } from "../store/usePageStore";
-import toast from "react-hot-toast";
+import { CATEGORIES } from "../utils/categories_list";
+import useDocumentTitle from "../utils/useDocumentTitle";
 
-/* ───────── UI HELPERS ───────── */
-
-function SectionLabel({ children }) {
+/* ── Field wrapper ── */
+function Field({ label, required, hint, children }) {
   return (
-    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-5">
+    <div className="flex flex-col gap-1">
+      <label className="text-[13px] font-semibold text-gray-700 flex items-center gap-1">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </label>
       {children}
-    </p>
+      {hint && <p className="text-xs text-gray-400 m-0">{hint}</p>}
+    </div>
   );
 }
 
-function FieldLabel({ children, required }) {
+/* ── Section card ── */
+function SectionCard({ title, subtitle, children, action }) {
   return (
-    <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 mb-2">
-      {children}
-      {required && <span className="text-red-500">*</span>}
-    </label>
+    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 className="m-0 text-[15px] font-bold text-gray-900 tracking-tight">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="mt-0.5 text-xs text-gray-400 m-0">{subtitle}</p>
+          )}
+        </div>
+        {action}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
   );
 }
 
-function InputBase({ className = "", ...props }) {
+/* ── Shared input ── */
+function StyledInput({ className = "", ...props }) {
   return (
     <input
-      className={`w-full px-3.5 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl
-      placeholder:text-gray-400 outline-none transition-all
-      focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 ${className}`}
       {...props}
+      className={`w-full px-3.5 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl outline-none transition-all duration-150 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 placeholder:text-gray-400 ${className}`}
     />
   );
 }
 
-/* ───────── MAIN PAGE ───────── */
+/* ── Shared select ── */
+function StyledSelect({ children, className = "", ...props }) {
+  return (
+    <div className="relative">
+      <select
+        {...props}
+        className={`w-full px-3.5 py-2.5 pr-9 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl outline-none appearance-none cursor-pointer transition-all duration-150 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 ${className}`}
+      >
+        {children}
+      </select>
+      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+    </div>
+  );
+}
 
+/* ── Page accordion card ── */
+function PageCard({ page, index, onChange, onRemove, total }) {
+  const [open, setOpen] = useState(index === 0);
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+      <div
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-2.5 px-4 py-3 cursor-pointer select-none border-b transition-colors ${open ? "bg-gray-50 border-gray-100" : "bg-white border-transparent"}`}
+      >
+        <GripVertical size={15} className="text-gray-300 shrink-0" />
+
+        <div className="flex-1 min-w-0">
+          <p className="m-0 text-[13px] font-semibold text-gray-700 truncate">
+            {page.title || `Page ${index + 1}`}
+          </p>
+          {!open && page.content && (
+            <p
+              className="mt-0.5 text-xs text-gray-400 truncate m-0"
+              dangerouslySetInnerHTML={{
+                __html:
+                  page.content.replace(/<[^>]+>/g, " ").slice(0, 80) + "…",
+              }}
+            />
+          )}
+        </div>
+
+        <span className="text-[11px] text-gray-400 shrink-0 bg-gray-100 px-2 py-0.5 rounded-full">
+          #{index + 1}
+        </span>
+
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(index);
+            }}
+            className="shrink-0 p-1 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+
+        <ChevronDown
+          size={14}
+          className={`text-gray-400 shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
+      </div>
+
+      {open && (
+        <div className="p-4 flex flex-col gap-3.5">
+          <Field label="Page Title" required>
+            <StyledInput
+              value={page.title}
+              onChange={(e) => onChange(index, "title", e.target.value)}
+              placeholder={`Page ${index + 1} title`}
+            />
+          </Field>
+          <div>
+            <label className="block text-[13px] font-semibold text-gray-700 mb-1.5">
+              Content
+            </label>
+            <RichTextEditor
+              value={page.content}
+              onChange={(val) => onChange(index, "content", val)}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── MAIN PAGE ── */
 export default function AddEditBookPage() {
+  useDocumentTitle("Add Book | NumisVault");
+
   const navigate = useNavigate();
   const { bookId } = useParams();
+  const coverInputRef = useRef(null);
 
   const { createBook, updateBook, fetchBookById, bookDetails } = useBookStore();
   const { pages, fetchPages, resetPages } = usePageStore();
@@ -49,6 +166,7 @@ export default function AddEditBookPage() {
   const isEdit = Boolean(bookId);
   const [loading, setLoading] = useState(false);
   const [coverPreview, setCoverPreview] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -61,19 +179,14 @@ export default function AddEditBookPage() {
     pages: [{ title: "Page 1", content: "" }],
   });
 
-  // Load book details + pages in edit mode
   useEffect(() => {
     if (isEdit && bookId) {
       fetchBookById(bookId);
-      fetchPages(bookId, 1, 1000); // fetch all pages
+      fetchPages(bookId, 1, 1000);
     }
-
-    return () => {
-      resetPages();
-    };
+    return () => resetPages();
   }, [bookId]);
 
-  // Set main book data when editing
   useEffect(() => {
     if (isEdit && bookDetails) {
       setFormData((prev) => ({
@@ -88,12 +201,10 @@ export default function AddEditBookPage() {
             ? bookDetails.isPublished
             : 0,
       }));
-
       setCoverPreview(bookDetails.cover_image?.url || null);
     }
   }, [bookDetails]);
 
-  // Set pages from page store when editing
   useEffect(() => {
     if (isEdit) {
       setFormData((prev) => ({
@@ -111,72 +222,61 @@ export default function AddEditBookPage() {
     }
   }, [pages]);
 
-  const handleCoverChange = (e) => {
-    const file = e.target.files[0];
+  const processImageFile = (file) => {
     if (!file) return;
-
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_SIZE) {
+    if (file.size > 5 * 1024 * 1024) {
       toast.error("Image must be under 5MB");
       return;
     }
-
     setCoverPreview(URL.createObjectURL(file));
-
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = () =>
       setFormData((prev) => ({ ...prev, cover_image: reader.result }));
-    };
     reader.readAsDataURL(file);
   };
 
-  // Handle input change
+  const handleCoverChange = (e) => processImageFile(e.target.files[0]);
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    processImageFile(e.dataTransfer.files[0]);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        name === "isPublished"
-          ? Number(value)
-          : name === "price"
-            ? value
-            : value,
+      [name]: name === "isPublished" ? Number(value) : value,
     }));
   };
 
-  // Handle page field change
   const handlePageChange = (index, key, value) => {
     const updatedPages = [...formData.pages];
-    updatedPages[index] = {
-      ...updatedPages[index],
-      [key]: value,
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      pages: updatedPages,
-    }));
+    updatedPages[index] = { ...updatedPages[index], [key]: value };
+    setFormData((prev) => ({ ...prev, pages: updatedPages }));
   };
 
-  // Add page
   const addPage = () => {
-    const newPageNum = formData.pages.length + 1;
+    const n = formData.pages.length + 1;
     setFormData((prev) => ({
       ...prev,
-      pages: [...prev.pages, { title: `Page ${newPageNum}`, content: "" }],
+      pages: [...prev.pages, { title: `Page ${n}`, content: "" }],
     }));
   };
 
-  // Submit
+  const removePage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      pages: prev.pages.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.title.trim()) {
       toast.error("Title is required");
       return;
     }
-
     setLoading(true);
     try {
       const payload = {
@@ -190,13 +290,8 @@ export default function AddEditBookPage() {
           pageNumber: index + 1,
         })),
       };
-
-      if (isEdit) {
-        await updateBook(bookId, payload);
-      } else {
-        await createBook(payload);
-      }
-
+      if (isEdit) await updateBook(bookId, payload);
+      else await createBook(payload);
       navigate("/books");
     } catch (error) {
       console.error(error);
@@ -209,196 +304,291 @@ export default function AddEditBookPage() {
   const canSubmit = formData.title.trim() && !loading;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Back */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-7"
-        >
-          <ArrowLeft size={15} />
-          Back
-        </button>
+    <div className="min-h-screen bg-[#f4f5f7]">
+      {/* ── TOP BAR ── */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition"
+            >
+              <ArrowLeft size={14} /> Back
+            </button>
+            <span className="text-gray-200">|</span>
+            <div className="flex items-center gap-2">
+              <BookOpen size={15} className="text-indigo-500" />
+              <span className="text-[14px] font-bold text-gray-900 tracking-tight">
+                {isEdit ? "Edit Book" : "New Book"}
+              </span>
+            </div>
+          </div>
 
-        {/* Header */}
-        <div className="mb-7">
-          <h1 className="text-2xl font-bold">
-            {isEdit ? "Edit Book" : "Create Book"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your book details here.
-          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="px-4 py-1.5 text-[13px] font-medium rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="book-form"
+              disabled={!canSubmit}
+              className="flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-semibold rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {loading && <Loader2 size={13} className="animate-spin" />}
+              {isEdit ? "Save Changes" : "Publish Book"}
+            </button>
+          </div>
         </div>
+      </header>
 
-        <form onSubmit={handleSubmit}>
-          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-            {/* Core Info */}
-            <div className="px-7 py-6 border-b">
-              <SectionLabel>Core Information</SectionLabel>
-
-              <div className="sm:col-span-2">
-                <FieldLabel>Cover Image</FieldLabel>
-                <div
-                  className="border-dashed border-2 border-gray-300 rounded-xl p-4 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:border-indigo-500"
-                  onClick={() => document.getElementById("coverInput").click()}
-                >
-                  {coverPreview ? (
-                    <img
-                      src={coverPreview}
-                      alt="Cover Preview"
-                      className="h-32 object-contain mb-2"
+      {/* ── PAGE BODY ── */}
+      <div className="max-w-5xl mx-auto px-6 py-7 pb-16">
+        <form id="book-form" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_296px] gap-5 items-start">
+            {/* ── LEFT COLUMN ── */}
+            <div className="flex flex-col gap-5">
+              {/* Book Details */}
+              <SectionCard
+                title="Book Details"
+                subtitle="Core metadata for this book"
+              >
+                <div className="flex flex-col gap-4">
+                  <Field label="Title" required>
+                    <StyledInput
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="Enter book title…"
+                      required
                     />
-                  ) : (
-                    <p className="text-sm">
-                      Drag & drop or click to upload cover image
+                  </Field>
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <Field label="Author" required>
+                      <StyledInput
+                        name="author"
+                        value={formData.author}
+                        onChange={handleChange}
+                        placeholder="Author name"
+                        required
+                      />
+                    </Field>
+                    <Field label="Price (₹)" required>
+                      <StyledInput
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleChange}
+                        placeholder="0.00"
+                        onWheel={(e) => e.target.blur()}
+                        min={0}
+                        required
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Category">
+                    <StyledSelect
+                      name="category"
+                      value={formData.category}
+                      onChange={handleChange}
+                    >
+                      <option value="">Select a category…</option>
+                      {CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </StyledSelect>
+                  </Field>
+                </div>
+              </SectionCard>
+
+              {/* Description */}
+              <SectionCard
+                title="Description"
+                subtitle="Displayed on the book detail page"
+              >
+                <RichTextEditor
+                  value={formData.description}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, description: val }))
+                  }
+                />
+              </SectionCard>
+
+              {/* Pages */}
+              <SectionCard
+                title="Pages"
+                subtitle={`${formData.pages.length} page${formData.pages.length !== 1 ? "s" : ""}`}
+                action={
+                  <button
+                    type="button"
+                    onClick={addPage}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-semibold hover:bg-indigo-100 transition"
+                  >
+                    <Plus size={13} /> Add Page
+                  </button>
+                }
+              >
+                <div className="flex flex-col gap-2.5">
+                  {formData.pages.map((page, index) => (
+                    <PageCard
+                      key={index}
+                      page={page}
+                      index={index}
+                      onChange={handlePageChange}
+                      onRemove={removePage}
+                      total={formData.pages.length}
+                    />
+                  ))}
+                </div>
+              </SectionCard>
+            </div>
+
+            {/* ── RIGHT COLUMN ── */}
+            <div className="flex flex-col gap-4 lg:sticky lg:top-20">
+              {/* Visibility */}
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3.5 border-b border-gray-100">
+                  <p className="m-0 text-[13px] font-bold text-gray-900">
+                    Visibility
+                  </p>
+                </div>
+                <div className="px-4 py-4 flex flex-col gap-3">
+                  <Field label="Status">
+                    <StyledSelect
+                      name="isPublished"
+                      value={formData.isPublished}
+                      onChange={handleChange}
+                    >
+                      <option value={0}>Draft</option>
+                      <option value={1}>Published</option>
+                    </StyledSelect>
+                  </Field>
+                  <div
+                    className={`flex items-start gap-2 px-3 py-2.5 rounded-xl ${formData.isPublished === 1 ? "bg-green-50" : "bg-yellow-50"}`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full shrink-0 mt-1 ${formData.isPublished === 1 ? "bg-green-500" : "bg-yellow-400"}`}
+                    />
+                    <p
+                      className={`m-0 text-xs leading-relaxed ${formData.isPublished === 1 ? "text-green-700" : "text-yellow-700"}`}
+                    >
+                      {formData.isPublished === 1
+                        ? "This book is visible to all readers."
+                        : "This book is saved as a draft and not visible."}
                     </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cover Image */}
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                  <p className="m-0 text-[13px] font-bold text-gray-900">
+                    Cover Image
+                  </p>
+                  {coverPreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCoverPreview(null);
+                        setFormData((p) => ({ ...p, cover_image: "" }));
+                      }}
+                      className="p-0.5 text-gray-400 hover:text-gray-700 transition"
+                    >
+                      <X size={14} />
+                    </button>
                   )}
+                </div>
+                <div className="px-4 py-4 flex flex-col gap-2.5">
+                  <div
+                    onClick={() => coverInputRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOver(true);
+                    }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={handleDrop}
+                    className={`border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all flex flex-col items-center justify-center
+                      ${dragOver ? "border-indigo-400 bg-indigo-50" : "border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-indigo-50/40"}
+                      ${coverPreview ? "p-0 min-h-[180px]" : "py-7 px-4"}`}
+                  >
+                    {coverPreview ? (
+                      <img
+                        src={coverPreview}
+                        alt="Cover"
+                        className="w-full block object-cover max-h-60"
+                      />
+                    ) : (
+                      <>
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-2.5">
+                          <ImagePlus size={18} className="text-indigo-500" />
+                        </div>
+                        <p className="m-0 text-[13px] font-medium text-gray-700">
+                          Upload cover
+                        </p>
+                        <p className="mt-1 m-0 text-xs text-gray-400 text-center">
+                          Drag & drop or click · PNG, JPG up to 5MB
+                        </p>
+                      </>
+                    )}
+                  </div>
                   <input
+                    ref={coverInputRef}
                     type="file"
-                    id="coverInput"
                     accept="image/*"
                     className="hidden"
                     onChange={handleCoverChange}
                   />
+                  {coverPreview && (
+                    <button
+                      type="button"
+                      onClick={() => coverInputRef.current?.click()}
+                      className="w-full py-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition"
+                    >
+                      Replace image
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="mb-5 mt-5">
-                <FieldLabel required>Title</FieldLabel>
-                <InputBase
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="Book title..."
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <FieldLabel required>Author</FieldLabel>
-                  <InputBase
-                    name="author"
-                    value={formData.author}
-                    onChange={handleChange}
-                    placeholder="Author name"
-                    required
-                  />
+              {/* Summary */}
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+                <div className="px-4 py-3.5 border-b border-gray-100">
+                  <p className="m-0 text-[13px] font-bold text-gray-900">
+                    Summary
+                  </p>
                 </div>
-
-                <div>
-                  <FieldLabel required>Price</FieldLabel>
-                  <InputBase
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    placeholder="₹ Price"
-                    required
-                  />
+                <div className="px-4 py-4 flex flex-col gap-2.5">
+                  {[
+                    { label: "Pages", value: formData.pages.length },
+                    { label: "Category", value: formData.category || "—" },
+                    { label: "Author", value: formData.author || "—" },
+                    {
+                      label: "Price",
+                      value: formData.price
+                        ? `₹${Number(formData.price).toLocaleString("en-IN")}`
+                        : "—",
+                    },
+                  ].map(({ label, value }) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="text-xs text-gray-400 shrink-0">
+                        {label}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-700 text-right truncate max-w-[60%]">
+                        {value}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-
-                <div>
-                  <FieldLabel required>Status</FieldLabel>
-                  <select
-                    name="isPublished"
-                    value={formData.isPublished}
-                    onChange={handleChange}
-                    className="w-full px-3.5 py-2.5 text-sm text-gray-900 bg-gray-50 border border-gray-200 rounded-xl
-                    outline-none transition-all focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-                  >
-                    <option value={0}>Freeze</option>
-                    <option value={1}>Publish</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <FieldLabel>
-                    <Tag size={13} /> Category
-                  </FieldLabel>
-                  <InputBase
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    placeholder="e.g. Fiction, Tech"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="px-7 py-6 border-b">
-              <SectionLabel>Description</SectionLabel>
-              <RichTextEditor
-                value={formData.description}
-                onChange={(val) =>
-                  setFormData((prev) => ({ ...prev, description: val }))
-                }
-              />
-            </div>
-
-            {/* Pages */}
-            <div className="px-7 py-6 border-b">
-              <SectionLabel>Pages</SectionLabel>
-
-              {formData.pages.map((page, index) => (
-                <div
-                  key={index}
-                  className="mb-6 border border-gray-200 rounded-xl p-4 bg-gray-50"
-                >
-                  <FieldLabel required>Page Title</FieldLabel>
-                  <InputBase
-                    value={page.title}
-                    onChange={(e) =>
-                      handlePageChange(index, "title", e.target.value)
-                    }
-                    placeholder={`Page ${index + 1} title`}
-                  />
-
-                  <div className="mt-3">
-                    <FieldLabel>Content</FieldLabel>
-                    <RichTextEditor
-                      value={page.content}
-                      onChange={(val) =>
-                        handlePageChange(index, "content", val)
-                      }
-                    />
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addPage}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-xl text-sm hover:bg-indigo-200 transition"
-              >
-                <Plus size={14} /> Add New Page
-              </button>
-            </div>
-
-            {/* Footer */}
-            <div className="flex justify-between items-center px-7 py-4 bg-gray-50 border-t">
-              <p className="text-xs text-gray-400">
-                <span className="text-red-500">*</span> Required fields
-              </p>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="px-4 py-2 border rounded-xl text-gray-600"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50"
-                >
-                  {loading && <Loader2 size={15} className="animate-spin" />}
-                  {isEdit ? "Update Book" : "Create Book"}
-                </button>
               </div>
             </div>
           </div>

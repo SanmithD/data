@@ -1,17 +1,17 @@
+import sharp from "sharp";
+import cloudinary from "../config/cloudinary.js";
 import { getRedis } from "../config/redis.js";
 import { Book } from "../models/book.js";
 import { Page } from "../models/book_page.model.js";
 import { Counter } from "../models/counter.js";
 import { AppError } from "../utils/AppError.js";
-import sharp from "sharp";
-import { uploadImage } from "../utils/uploadToCloudinary.js";
-import cloudinary from "../config/cloudinary.js";
 import {
   commonSearchOrNumber,
   commonSearchOrString,
   mongodbAddFieldsForRegexNumberSearchByFieldsArr,
   mongodbAddFieldsForRegexNumberSearchNew,
 } from "../utils/mongodbAddFieldsForRegexNumberSearch.util.js";
+import { uploadImage } from "../utils/uploadToCloudinary.js";
 
 class BookRepository {
   commonSearchOrCondition = async ({ searchQuery }) => {
@@ -527,12 +527,10 @@ class BookRepository {
 
     if (!book) throw new AppError("Book not found", 404);
 
-    if (
-      book.cover_image?.public_id !== null ||
-      book.cover_image?.public_id !== undefined ||
-      book.cover_image?.public_id !== ""
-    ) {
-      await cloudinary.uploader.destroy(book.cover_image.public_id);
+    const publicId = book?.cover_image?.public_id;
+
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId);
     }
 
     book.isDeleted = true;
